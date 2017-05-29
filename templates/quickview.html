@@ -1,0 +1,184 @@
+{% extends "dashboard.html" %}
+{% block page_content %}
+    <!-- page content -->
+    <div class="right_col" role="main">
+        <div class="">
+            <div class="page-title">
+                <div class="title_left">
+                    <h3>
+                        Quick View
+                        <small>of {{ date }}</small>
+                    </h3>
+                </div>
+                <div style="float: right">
+                    <form class="form-inline" action="/quickview" method="post" name="quickview" id="quickview">
+                        <div class="form-group">
+                            <label class="sr-only" for="quick_date">Quick View of</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="quick_date" name="quick_date"
+                                       value="{{ date }}" data-date-end-date="0d">
+                                <div class="input-group-addon" onclick="document.getElementById('quickview').submit()">
+                                    <i class="fa fa-search"
+                                       aria-hidden="true"></i></div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+            <div class="row">
+                <div class="col-md-6 col-sm-6 col-xs-12">
+                    <div class="x_panel">
+                        <div class="x_title">
+                            <h2>All Developers
+                                <small>List of all developers</small>
+                            </h2>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="x_content">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th>Dev. Id</th>
+                                    <th>Dev. Name</th>
+                                    <th>Download Latest</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% if all_users %}
+                                    {% for user in all_users %}
+                                        <tr>
+                                            <td>{{ user.id }}</td>
+                                            {#                                            <td>{{ user.username }}</td>#}
+                                            <td>
+                                                <a href="/all_tasks/{{ user.username }}"
+                                                   title="Browse All">
+                                                    {{ user.username }}
+                                                </a></td>
+                                            {% if user.latest_task == "no" %}
+                                                <td>
+
+                                                </td>
+                                            {% else %}
+                                                <td>
+                                                    <a href="/download/{{ user.username }}/{{ user.latest_task.replace("/","_") }}"
+                                                       title="{{ user.latest_task }}">
+                                                        <button type="button" class="btn btn-default btn-sm">
+                                                            <i class="fa fa-download" aria-hidden="true"></i>
+                                                        </button>
+                                                    </a>
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
+                                {% endif %}
+                                </tbody>
+                            </table>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2>Task Submission is Completed
+                                        <small> {{ date }} </small>
+                                    </h2>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>Username</th>
+                                            <th>Download</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% if present %}
+                                            {% for user in present %}
+                                                <tr>
+                                                    <td><span class="present"> &bull; </span>
+                                                        <a href="/all_tasks/{{ user }}"
+                                                           title="Browse All">
+                                                            {{ user }}
+                                                        </a>
+                                                    </td>
+
+                                                    <td>
+                                                        <a href="/download/{{ user }}/{{ date.replace("/","_") }}"
+                                                           title="{{ date }}">
+                                                            <button type="button" class="btn btn-default btn-sm">
+                                                                <i class="fa fa-download" aria-hidden="true"></i>
+                                                            </button>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% endif %}
+                                        </tbody>
+                                    </table>
+                                    {% if present %}
+                                        <div class="generate_xls">
+                                            <a href="/download_all/{{ date.replace("/", "_") }}">
+                                                <button type="button" class="btn btn-default btn-sm">
+                                                    Download All
+                                                </button>
+                                            </a>
+                                        </div>
+
+                                        <div class="generate_xls">
+                                            <a href="/download_project/{{ date.replace("/","_") }}">
+                                                <button type="button" class="btn btn-default btn-sm">
+                                                    Download Project-wise
+                                                </button>
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12">
+                            <div class="x_panel">
+                                <div class="x_title">
+                                    <h2>Task Submission is Pending
+                                        <small> {{ date }}</small>
+                                    </h2>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="x_content">
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>Username</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% if absent %}
+                                            {% for user in absent %}
+                                                <tr>
+                                                    <td><span class="absent"> &bull; </span>
+                                                        <a href="/all_tasks/{{ user }}"
+                                                           title="Browse All">
+                                                            {{ user }}
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+    <!-- /page content -->
+{% endblock %}

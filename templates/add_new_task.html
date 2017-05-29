@@ -1,0 +1,362 @@
+{% extends "dashboard.html" %}
+{#{% import "bootstrap/wtf.html" as wtf %}#}
+{% block css %}
+
+{% endblock %}
+{% block page_content %}
+    <div class="right_col" role="main" style="min-height: 636px;">
+        <div>
+            <div class="clearfix"></div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="x_panel">
+                        <div class="x_title">
+                            <h2> Today's Task Details</h2>
+                            <ul class="nav navbar-right panel_toolbox">
+                                <li>
+                                    <button type="button"
+                                            class="btn btn-default btn-sm"
+                                            data-toggle="modal"
+                                            data-target="#myModal">
+                                        Add New Task
+                                    </button>
+                                </li>
+                            </ul>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="x_content">
+                            <table id="example" class="table table-bordered" cellspacing="0" width="100%">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Project URL</th>
+                                    <th>Task Title</th>
+                                    <th>Milestone</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Est. Hours</th>
+                                    <th>QA</th>
+                                    <th>Developer</th>
+                                    <th>Priority</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% if today %}
+                                    {% for task in today %}
+                                        <tr>
+                                            <td>
+                                                <a class="cursor_pointer" data-toggle="modal"
+                                                   data-target="#modal{{ task.id }}" title="Edit">
+                                                    <i class="fa fa-pencil-square-o"></i>
+                                                </a>
+                                                <a class="cursor_pointer delete_client" title="Delete"
+                                                   id="{{ task.id }}"
+                                                   onclick="return remove_task(this.id)">
+                                                    <i class="fa fa-trash-o"></i>
+                                                </a>
+                                            </td>
+
+                                            <td>
+                                                <a href="http://erp.drcsystems.com/pms/projects/details/{{ task.project_id }}">Click
+                                                    Here </a></td>
+                                            <td> {{ task.task_title }} </td>
+                                            <td> {{ task.milestone }} </td>
+                                            <td> {{ task.start_date }} </td>
+                                            <td> {{ task.end_date }} </td>
+                                            <td> {{ task.estimated_hours }} </td>
+                                            <td> {{ task.qa }} </td>
+                                            <td> {{ task.developer }} </td>
+                                            <td> {{ task.priority }} </td>
+                                            <td> {{ task.type }} </td>
+                                            <td class="hide_extra"
+                                                title="{{ task.description }}"> {{ task.description }} </td>
+                                            {#                                            <td> {{ task.added_on }} </td>#}
+                                        </tr>
+                                    {% endfor %}
+                                {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if any_tasks %}
+                            <div class="generate_xls">
+                                <a href="{{ url_for('save_tasks') }}">
+                                    <button type="button" class="btn btn-default btn-sm">
+                                        Generate XLS File
+                                    </button>
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Add New Task Modal #}
+    <!-- Modal -->
+    <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Add New Task</h4>
+                </div>
+                <div class="modal-body">
+                    <form name="add" id="add" class="form-horizontal" method="POST"
+                          action="{{ url_for('developer') }}">
+
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="project_id">Project ID</label>
+                            <div class="col-sm-10">
+                                <input required type="text" class="form-control" id="project_id"
+                                       name="project_id" placeholder="Enter Project ID">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="task_title">Task Title</label>
+                            <div class="col-sm-10">
+                                <input required type="text" class="form-control" id="task_title"
+                                       name="task_title" placeholder="Enter Task Title">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="milestone">Milestone</label>
+                            <div class="col-sm-10">
+                                <input required type="text" class="form-control" id="milestone" name="milestone"
+                                       placeholder="Enter Milestone">
+                            </div>
+                        </div>
+
+                        <div class="input-daterange input-group form-group" id="datepicker">
+                            <label class="col-sm-2 control-label" for="input_from">Start Date</label>
+                            <div class="col-sm-4">
+                                <input type="text" id="input_from" class="input-sm form-control" name="start_date"
+                                       value="{{ formatted_date }}"/>
+                            </div>
+                            <label class="col-sm-2 control-label" for="input_to">End Date</label>
+                            <div class="col-sm-4">
+                                <input type="text" id="input_to" class="input-sm form-control" name="end_date"
+                                       value="{{ formatted_date }}"/>
+                            </div>
+                        </div>
+                        <div class="form-group bootstrap-timepicker">
+                            <label class="col-sm-2 control-label" for="estimated_hours">Est. Hours</label>
+                            <div class="col-sm-4">
+                                <input style="    text-align: center;" id="estimated_hours" name="estimated_hours"
+                                       type="text"
+                                       class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="qa">QA</label>
+                            <div class="col-sm-4">
+                                <input type="text" class="form-control" id="qa" name="qa"
+                                       placeholder="Enter QA">
+                            </div>
+                            <label class="col-sm-2 control-label" for="developer">Developer</label>
+                            <div class="col-sm-4">
+                                <input type="text" class="form-control" id="developer"
+                                       placeholder="{{ user.username }}" disabled>
+                            </div>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="priority">Priority</label>
+                            <div class="col-sm-4">
+                                <select class="form-control" name="priority" id="priority">
+                                    <option>High</option>
+                                    <option>Medium</option>
+                                    <option>Low</option>
+                                </select>
+                            </div>
+                            <label class="col-sm-2 control-label" for="type">Type</label>
+                            <div class="col-sm-4">
+                                <select class="form-control" name="type" id="type">
+                                    <option>New</option>
+                                    <option>Old</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="description">Description</label>
+                            <div class="col-sm-10">
+                                        <textarea required class="form-control" rows="3" id="description"
+                                                  name="description"
+                                                  placeholder="Enter Description"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" name="submit"
+                            class="btn btn-default" form="add">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if today %}
+        {% for task in today %}
+            <div id="modal{{ task.id }}" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Update Task</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form name="update{{ task.id }}" id="update{{ task.id }}" class="form-horizontal"
+                                  method="POST"
+                                  action="update_task/{{ task.id }}">
+
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label" for="project_id">Project ID</label>
+                                    <div class="col-sm-10">
+                                        <input required type="text" class="form-control" id="project_id"
+                                               name="project_id" placeholder="Enter Project ID"
+                                               value="{{ task.project_id }}">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label" for="task_title">Task Title</label>
+                                    <div class="col-sm-10">
+                                        <input required type="text" class="form-control" id="task_title"
+                                               name="task_title" placeholder="Enter Task Title"
+                                               value="{{ task.task_title }}">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label" for="milestone">Milestone</label>
+                                    <div class="col-sm-10">
+                                        <input required type="text" class="form-control" id="milestone" name="milestone"
+                                               placeholder="Enter Milestone" value="{{ task.milestone }}">
+                                    </div>
+                                </div>
+
+                                <div class="input-daterange input-group form-group" id="datepicker">
+                                    <label class="col-sm-2 control-label" for="input_from">Start Date</label>
+                                    <div class="col-sm-4">
+                                        <input type="text" id="input_from" class="input-sm form-control"
+                                               name="start_date"
+                                               value="{{ task.start_date }}"/>
+                                    </div>
+                                    <label class="col-sm-2 control-label" for="input_to">End Date</label>
+                                    <div class="col-sm-4">
+                                        <input type="text" id="input_to" class="input-sm form-control" name="end_date"
+                                               value="{{ task.end_date }}"/>
+                                    </div>
+                                </div>
+                                <div class="form-group bootstrap-timepicker">
+                                    <label class="col-sm-2 control-label" for="estimated_hours{{ task.id }}">Est. Hours</label>
+                                    <div class="col-sm-4">
+                                        <input style="text-align: center;" id="estimated_hours{{ task.id }}"
+                                               name="estimated_hours" type="text"
+                                               class="form-control"
+                                               value="{{ task.estimated_hours.split(":")[0] }}:{{ task.estimated_hours.split(":")[1] }}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label" for="qa">QA</label>
+                                    <div class="col-sm-4">
+                                        <input type="text" class="form-control" id="qa" name="qa"
+                                               placeholder="Enter QA">
+                                    </div>
+                                    <label class="col-sm-2 control-label" for="developer">Developer</label>
+                                    <div class="col-sm-4">
+                                        <input type="text" class="form-control" id="developer"
+                                               placeholder="{{ user.username }}" disabled>
+                                    </div>
+                                </div>
+
+
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label" for="priority">Priority</label>
+                                    <div class="col-sm-4">
+                                        <select class="form-control" name="priority" id="priority">
+                                            {% if task.priority == 'High' %}
+                                                <option selected>High</option>
+                                                <option>Medium</option>
+                                                <option>Low</option>
+                                            {% elif task.priority == 'Medium' %}
+                                                <option>High</option>
+                                                <option selected>Medium</option>
+                                                <option>Low</option>
+                                            {% else %}
+                                                <option>High</option>
+                                                <option>Medium</option>
+                                                <option selected>Low</option>
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                    <label class="col-sm-2 control-label" for="type">Type</label>
+                                    <div class="col-sm-4">
+                                        <select class="form-control" name="type" id="type">
+                                            {% if task.type == 'New' %}
+                                                <option selected>New</option>
+                                                <option>Old</option>
+                                            {% else %}
+                                                <option>New</option>
+                                                <option selected>Old</option>
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label" for="description">Description</label>
+                                    <div class="col-sm-10">
+                                        <textarea required class="form-control" rows="3" id="description"
+                                                  name="description"
+                                                  placeholder="Enter Description">{{ task.description }}</textarea>
+                                    </div>
+                                </div>
+
+
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" name="submit"
+                                    class="btn btn-default" form="update{{ task.id }}">
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        {% endfor %}
+    {% endif %}
+{% endblock %}
+
+{% block js %}
+
+    {% if today %}
+        {% for task in today %}
+            <script>
+                $('#estimated_hours{{ task.id }}').timepicker(
+                    {
+                        showMeridian: false,
+                        defaultTime: '08:00',
+                        icons: {
+                            up: 'fa fa-sort-up',
+                            down: 'fa fa-sort-down'
+                        }
+                    }
+                );
+            </script>
+        {% endfor %}
+    {% endif %}
+{% endblock %}

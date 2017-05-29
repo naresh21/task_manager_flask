@@ -1,0 +1,116 @@
+@import url('https://fonts.googleapis.com/css?family=Inconsolata|Quicksand');
+/* Body and General Styles Start
+-------------------------------------------------- */
+body {font-family: 'Inconsolata', monospace;height: 100vh;color: #5D82A7;}
+/*inconsolata for body*/
+h1, h2, h3, h4, h5, h6{
+    font-family: 'Quicksand', sans-serif;
+}
+.quicksand{font-family: 'Quicksand', sans-serif;}
+/* Body End
+-------------------------------------------------- */
+
+/* header Start
+-------------------------------------------------- */
+#header {}
+
+/* header End
+-------------------------------------------------- */
+
+/* navbar Start
+-------------------------------------------------- */
+#nav {}
+
+/* navbar End
+-------------------------------------------------- */
+
+/* content-login Start
+-------------------------------------------------- */
+#content-login .outer{display: table;position: absolute;height: 92vh;width: 100%;}
+#content-login .middle{display: table-cell;vertical-align: middle;text-align: center;}
+#content-login .inner{margin-left: auto;margin-right: auto;width: 50%}
+.Err{float: right;color: red;font-size: 90%;}
+.left{float: left;color: #5D82A7;}
+.title{background-color: #5D82A7;color: white}
+/* content-login End
+-------------------------------------------------- */
+
+/*content-admin Start*/
+
+/* Style the tab */
+div.tab {
+    float: left;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+    width: 20%;
+    text-align: center;
+    height: 100%;
+}
+
+/* Style the links inside the tab */
+div.tab a {
+    display: block;
+    color: white;
+    margin: 22px 20px;
+    padding: 5px;
+    text-decoration: none;
+    transition: 0.3s;
+    background-color: #5D82A7;
+    font-size: 17px;
+}
+
+/* Change background color of links on hover */
+div.tab a:hover {
+    background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+div.tab a:focus, .active {
+    background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+    float: left;
+    padding: 0 12px;
+    border: 1px solid #ccc;
+    width: 80%;
+    border-left: none;
+    /*height: 300px;*/
+    height: 100%;
+}
+
+.present{
+    color: greenyellow;
+}
+.absent{
+    color: grey;
+}
+
+/* footer Start
+-------------------------------------------------- */
+#footer {}
+
+/* footer End
+-------------------------------------------------- */
+
+/* xyz inner page Start
+-------------------------------------------------- */
+
+
+/* xyz inner page End
+-------------------------------------------------- *
+
+/* Responsive Style Start
+-------------------------------------------------- */
+@media (max-width: 1199px) {
+}
+
+@media (max-width: 991px) {
+}
+
+@media (max-width: 767px) {
+}
+
+/* Responsive Style End
+-------------------------------------------------- */
