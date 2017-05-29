@@ -50,8 +50,7 @@ def load_user(user_id):
 @app.route('/')
 def index():
     """
-    When 192.168.1.20 is loaded user will be redirected to login page
-    :return: returns url for login page
+    It redirects user to login page
     """
     return redirect(url_for('login'))
 
@@ -59,7 +58,7 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """
-    When 192.168.1.20 is called login page will be loaded
+    Login page is loaded
     :return:
         case 1: it redirects to admin/developer page if already logged in
         case 2: it redirects to admin/developer page if username and password is correct
@@ -107,7 +106,7 @@ def admin():
 
 def get_perfect_time(estimated_hours):
     """
-
+    If there is one digit hour then 0 is added
     :param estimated_hours: 
     """
     hour = estimated_hours.split(":")[0]
@@ -176,10 +175,7 @@ def developer():
 @login_required
 def quickview():
     """
-    It is called when admin is logged in into account
-    :return:
-        case 1: if admin tries to load this page, then redirects to admin page with clients regarding information
-        case 2: if client tries to load this page, then he/she is redirected to client page
+    It provides quickview for admin
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     if user.role == 'admin':
@@ -204,7 +200,7 @@ def quickview():
 
 def get_next_date():
     """
-    
+    It gets next working day's date
     :return: 
     """
     today_date = datetime.now()  # converting str to datetime obj
@@ -224,15 +220,12 @@ def get_next_date():
 def save_tasks():
     """
     Clients uses this for adding their daily tasks
-    :return:
-        case 1: 
-        case 2: 
     """
 
     @after_this_request
     def delete(response):
         """
-        deletes image
+        Deletes XLS and Zip Files after download
         :param response: khbr nai
         """
         try:
@@ -277,7 +270,7 @@ def download(username, date):
     @after_this_request
     def delete(response):
         """
-        deletes image
+        Deletes XLS and Zip Files after download
         :param response:
         """
         try:
@@ -418,7 +411,7 @@ def download_project(date):
     @after_this_request
     def delete(response):
         """
-        deletes image
+        Deletes XLS and Zip Files after download
         :param response:
         """
         try:
@@ -511,7 +504,7 @@ def download_all(date):
     @after_this_request
     def delete(response):
         """
-        deletes image
+        Deletes XLS and Zip Files after download
         :param response:
         """
         try:
@@ -603,7 +596,7 @@ def download_xls_all(date):
 
 def get_username(username):
     """
-    Removes Extra spaces
+    Removes Extra spaces in username
     :param username: 
     :return: 
     """
@@ -662,7 +655,7 @@ def fill_xls(ws, row, task_title, milestone, start_date, end_date, estimated_hou
 
 def update_database(task_id):
     """
-    :param task_id: 
+    For updating database after deleting task
     """
     import pdb
     pdb.set_trace()
@@ -683,11 +676,7 @@ def update_database(task_id):
 @login_required
 def remove_task(task_id):
     """
-    It is called by admin to remove developers
-    :return:
-        case 1: renders remove developer page with current username
-        case 2: if developer tries to load this page developer is redirected to developer page
-    :return:
+    It is called by user to delete task
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     if user.role == 'developer':
@@ -717,11 +706,7 @@ def remove_task(task_id):
 @login_required
 def update_task(task_id):
     """
-    It is called by admin to remove developers
-    :return:
-        case 1: renders remove developer page with current username
-        case 2: if developer tries to load this page developer is redirected to developer page
-    :return:
+    It is used by user to update task details
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
 
@@ -759,29 +744,11 @@ def update_task(task_id):
     return redirect(url_for(user.role))
 
 
-# @app.route('/all_tasks/<username>/<date>', methods=['GET', 'POST'])
-# @login_required
-# def all_tasks_of(username, date):
-#     """
-#     It is called by admin to see list of all developers
-#     :return:
-#
-# """ user = User.query.filter_by(id=current_user.get_id()).first() if user.role == 'admin': import pdb
-# pdb.set_trace() current = User.query.filter_by(username=username).first() is_there_details =
-# Details.query.filter_by(developer=current.username, added_on=date.replace("_", "/")).first() if is_there_details:
-# all_tasks_of_date = Details.query.filter_by(developer=current.username, added_on=date.replace("_", "/")) return
-# render_template('all_tasks_of.html', user=user, developer=current, all_tasks_of=all_tasks_of_date) return
-# render_template('all_tasks_of.html', user=user, developer=current) else: return redirect(url_for('developer'))
-
-
-# @app.route('/all_tasks/<username>/<date>', methods=['GET', 'POST'])
 @app.route('/all_tasks/<username>', methods=['GET', 'POST'])
 @login_required
 def all_tasks(username):
     """
-    It is called by admin to see list of all developers
-    :return:
-
+    It is used to download specific task
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     if user.role == 'admin':
@@ -842,10 +809,7 @@ def add_new_user():
 @login_required
 def change_password():
     """
-    It is called by admin to modify developers
-    :return:
-        case 1: renders modify developer page with current username
-        case 2: if developer tries to load this page developer is redirected to developer page
+    It is used for changing password
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     form = ChangePasswordForm()
