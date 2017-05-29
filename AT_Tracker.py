@@ -263,8 +263,6 @@ def save_tasks():
 def download(username, date):
     """
     It is called by admin to see list of all developers
-    :return:
-
     """
 
     @after_this_request
@@ -314,7 +312,7 @@ def download(username, date):
 
 def gather_project_titles(date, username):
     """
-
+    It gathers project titles for given date and user
     :param date: 
     :param username: 
     :return: 
@@ -387,7 +385,7 @@ def download_xls_data(user, date):
 
 def gather_developers(date, project_id):
     """
-
+    It gathers developers for given date and project_id
     :param project_id:
     :param date:
     :return:
@@ -404,7 +402,7 @@ def gather_developers(date, project_id):
 @login_required
 def download_project(date):
     """
-
+    It downloads projects by date
     :param date: 
     """
 
@@ -497,7 +495,7 @@ def download_project_wise(date):
 @login_required
 def download_all(date):
     """
-
+    It downloads all projects of given date
     :param date: 
     """
 
