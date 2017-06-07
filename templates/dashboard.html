@@ -77,7 +77,7 @@
                                         Developer </a></li>
                                 {% elif user.role == "developer" %}
                                     <li><a href="{{ url_for('developer') }}"><i class="fa fa-home"></i> Home </a></li>
-                                    {# <li><a href="{{ url_for('all_tasks') }}"><i class="fa fa-tasks"></i> All Tasks </a>#}
+                                     <li><a href="{{ url_for('all_tasks') }}"><i class="fa fa-tasks"></i> All Tasks </a>
 
                                 {% endif %}
                                 <li><a href="{{ url_for('change_password') }}"><i class="fa fa-key"></i> Change Password

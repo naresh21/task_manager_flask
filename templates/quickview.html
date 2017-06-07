@@ -11,14 +11,14 @@
                     </h3>
                 </div>
                 <div style="float: right">
-                    <form class="form-inline" action="/quickview" method="post" name="quickview" id="quickview">
+                    <form class="form-inline" action="{{ url_for('quickview') }}" method="post" name="quickview" id="quickview">
                         <div class="form-group">
                             <label class="sr-only" for="quick_date">Quick View of</label>
                             <div class="input-group">
                                 <input type="text" class="form-control" id="quick_date" name="quick_date"
                                        value="{{ date }}" data-date-end-date="0d">
-                                <div class="input-group-addon" onclick="document.getElementById('quickview').submit()">
-                                    <i class="fa fa-search"
+                                <div class="input-group-addon cursor_pointer" onclick="document.getElementById('quickview').submit()">
+                                    <i class="fa fa-search "
                                        aria-hidden="true"></i></div>
                             </div>
                         </div>

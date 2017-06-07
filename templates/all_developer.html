@@ -156,7 +156,7 @@
                         <div class="modal-body">
                             <form name="update{{ task.id }}" id="update{{ task.id }}" class="form-horizontal"
                                   method="POST"
-                                  action="/update_task/{{ task.id }}">
+                                  action="{{ url_for('update_task',task_id=task.id, next=request.endpoint) }}">
 
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label" for="project_id">Project ID</label>

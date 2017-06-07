@@ -41,8 +41,6 @@ ERP_BASE_URL = "http://erp.drcsystems.com/pms/projects/details/"
 def load_user(user_id):
     """
     For getting current_user
-    :param user_id: user_id of current_user
-    :return: returns current_user
     """
     return User.query.get(int(user_id))
 
@@ -50,7 +48,8 @@ def load_user(user_id):
 @app.route('/')
 def index():
     """
-    It redirects user to login page
+    When 192.168.1.20 is loaded, user will be redirected to login page
+      returns url for login page
     """
     return redirect(url_for('login'))
 
@@ -58,8 +57,8 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """
-    Login page is loaded
-    :return:
+    When 192.168.1.20 is called login page will be loaded
+     
         case 1: it redirects to admin/developer page if already logged in
         case 2: it redirects to admin/developer page if username and password is correct
         case 3: it redirects to login page again if username and password is incorrect
@@ -90,7 +89,7 @@ def login():
 def admin():
     """
     It is called when admin is logged in into account
-    :return:
+     
         case 1: if admin tries to load this page, then redirects to admin page with developers regarding information
         case 2: if developer tries to load this page, then he/she is redirected to developer page
     """
@@ -106,8 +105,7 @@ def admin():
 
 def get_perfect_time(estimated_hours):
     """
-    If there is one digit hour then 0 is added
-    :param estimated_hours: 
+    Used for getting perfect time as per required format
     """
     hour = estimated_hours.split(":")[0]
     numbers = sum(c.isdigit() for c in hour)
@@ -121,7 +119,7 @@ def get_perfect_time(estimated_hours):
 def developer():
     """
     It is called when developer is logged in into account
-    :return:
+     
         case 1: if developer is logged in then he/she is redirected to developer page with info
         case 2: if admin tried to load this page admin is redirected to admin page
     """
@@ -175,7 +173,7 @@ def developer():
 @login_required
 def quickview():
     """
-    It provides quickview for admin
+    It is called by admin to have a quickview of task details
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     if user.role == 'admin':
@@ -183,7 +181,7 @@ def quickview():
             date = datetime.now().strftime("%d/%m/%Y")
         else:
             date = request.form['quick_date']
-        all_users = User.query.filter_by(role="developer")
+        all_users = User.query.filter_by(role="developer").all()
         present = []
         absent = []
         for users in all_users:
@@ -200,8 +198,8 @@ def quickview():
 
 def get_next_date():
     """
-    It gets next working day's date
-    :return: 
+    It returns next working date
+      
     """
     today_date = datetime.now()  # converting str to datetime obj
     weekday = calendar.day_name[today_date.weekday()]  # getting day of selected start_date
@@ -219,14 +217,14 @@ def get_next_date():
 @login_required
 def save_tasks():
     """
-    Clients uses this for adding their daily tasks
+    Developers uses this for adding their daily tasks
+     
     """
 
     @after_this_request
     def delete(response):
         """
-        Deletes XLS and Zip Files after download
-        :param response: khbr nai
+        Removes xls and zip file after download
         """
         try:
             os.chdir(target_save_path)
@@ -238,8 +236,8 @@ def save_tasks():
             xls_files = glob.glob('*.zip')
             for xls in xls_files:
                 os.unlink(xls)
-        except:
-            pass
+        except Exception as e:
+            print e
         return response
 
     user = User.query.filter_by(id=current_user.get_id()).first()
@@ -262,14 +260,13 @@ def save_tasks():
 @login_required
 def download(username, date):
     """
-    It is called by admin to see list of all developers
+    Used to download specific user's xls file on specific date
     """
 
     @after_this_request
     def delete(response):
         """
-        Deletes XLS and Zip Files after download
-        :param response:
+        Removes xls and zip file after download
         """
         try:
             os.chdir(target_save_path)
@@ -303,19 +300,33 @@ def download(username, date):
             return redirect('/all_tasks/' + all_tasks_of[0].developer)
 
         generated_file = download_xls_data(current, date.replace("_", "/"))
-        return send_file(generated_file,
-                         as_attachment=True,
-                         attachment_filename=generated_file.split("/")[-1])
+
     else:
-        return redirect(url_for('developer'))
+        if request.method == "POST":
+            date = request.form['all_tasks_date']
+            # import pdb
+            # pdb.set_trace()
+            all_tasks_of = Details.query.filter_by(developer=user.username)
+            for task in all_tasks_of:
+                if date in task.added_on:
+                    generated_file = download_xls_data(user, date.replace("_", "/"))
+                    return send_file(generated_file,
+                                     as_attachment=True,
+                                     attachment_filename=generated_file.split("/")[-1])
+
+            flash("NoData")
+            return redirect('/all_tasks/' + all_tasks_of[0].developer)
+
+        generated_file = download_xls_data(user, date.replace("_", "/"))
+
+    return send_file(generated_file,
+                     as_attachment=True,
+                     attachment_filename=generated_file.split("/")[-1])
 
 
 def gather_project_titles(date, username):
     """
-    It gathers project titles for given date and user
-    :param date: 
-    :param username: 
-    :return: 
+    It gathers unique project titles for given date and username
     """
     if username == "all":
         task_details = Details.query.filter_by(added_on=date)
@@ -331,9 +342,7 @@ def gather_project_titles(date, username):
 
 def download_xls_data(user, date):
     """
-    Generates XLS file and returns filename
-    :param date: 
-    :param user: user object
+    Generates XLS file for given user and date
     """
 
     projects = gather_project_titles(date, user.username)
@@ -385,10 +394,7 @@ def download_xls_data(user, date):
 
 def gather_developers(date, project_id):
     """
-    It gathers developers for given date and project_id
-    :param project_id:
-    :param date:
-    :return:
+    Ii gathers developer names for given date and project_id
     """
     developers_details = Details.query.filter_by(project_id=project_id, added_on=date)
     all_devs = []
@@ -402,15 +408,13 @@ def gather_developers(date, project_id):
 @login_required
 def download_project(date):
     """
-    It downloads projects by date
-    :param date: 
+    Downloads project-wise of given date
     """
 
     @after_this_request
     def delete(response):
         """
-        Deletes XLS and Zip Files after download
-        :param response:
+        Removes xls and zip file after download
         """
         try:
             os.chdir(target_save_path)
@@ -437,8 +441,7 @@ def download_project(date):
 
 def download_project_wise(date):
     """
-    Generates XLS file and returns filename
-    :param date: 
+    Downloads xls data project-wise for given date
     """
     # import pdb
     # pdb.set_trace()
@@ -495,15 +498,13 @@ def download_project_wise(date):
 @login_required
 def download_all(date):
     """
-    It downloads all projects of given date
-    :param date: 
+    Downloads all developer's data on given date
     """
 
     @after_this_request
     def delete(response):
         """
-        Deletes XLS and Zip Files after download
-        :param response:
+        Removes xls and zip file after download
         """
         try:
             os.chdir(target_save_path)
@@ -530,8 +531,7 @@ def download_all(date):
 
 def download_xls_all(date):
     """
-    Generates XLS file and returns filename
-    :param date: 
+    Downloads all developer's data on given date
     """
     users = Details.query.filter_by(added_on=date)
     all_devs = []
@@ -573,7 +573,6 @@ def download_xls_all(date):
         if len(projects) != 1:
             zf = zipfile.ZipFile("All_Task" + date.replace("/", "_") + '.zip', "w")
             for dirname, subdirs, files in os.walk("xls_data"):
-                # zf.write(dirname)
                 for filename in files:
                     zf.write(os.path.join(dirname, filename))
             zf.close()
@@ -584,7 +583,6 @@ def download_xls_all(date):
     else:
         zf = zipfile.ZipFile("All_Task" + date.replace("/", "_") + '.zip', "w")
         for dirname, subdirs, files in os.walk("xls_data"):
-            # zf.write(dirname)
             for filename in files:
                 zf.write(os.path.join(dirname, filename))
         zf.close()
@@ -594,9 +592,7 @@ def download_xls_all(date):
 
 def get_username(username):
     """
-    Removes Extra spaces in username
-    :param username: 
-    :return: 
+    Removes Extra spaces
     """
     return username.replace(" ", "_")
 
@@ -604,10 +600,7 @@ def get_username(username):
 def set_headers(ws):
     """
     Sets headers in XLS file
-    :param ws: worksheet
     """
-    # Calibri
-    # 11
     style = xlwt.easyxf('font: bold on; pattern: pattern solid, fore_colour blue')
     ws.write(0, 0, "Task_Title", style)
     ws.write(0, 1, "Milestone", style)
@@ -622,21 +615,9 @@ def set_headers(ws):
 
 
 def fill_xls(ws, row, task_title, milestone, start_date, end_date, estimated_hours, qa,
-             developer, priority, _type, description):
+             _developer, priority, _type, description):
     """
     For filling up XLS file
-    :param ws: WorkSheet
-    :param row: Row NUmber
-    :param task_title: Title of task
-    :param milestone: Milestone
-    :param start_date: Start date
-    :param end_date: End Date
-    :param estimated_hours: Estimated Hours
-    :param qa: QA
-    :param developer:Developer Name 
-    :param priority: Priority of Task
-    :param _type: Type of Task
-    :param description: Description
     """
     # style1 = xlwt.easyxf(num_format_str='DD/MM/YYYY')
     ws.write(row, 0, task_title)
@@ -645,7 +626,7 @@ def fill_xls(ws, row, task_title, milestone, start_date, end_date, estimated_hou
     ws.write(row, 3, end_date)
     ws.write(row, 4, estimated_hours)
     ws.write(row, 5, qa)
-    ws.write(row, 6, developer)
+    ws.write(row, 6, _developer)
     ws.write(row, 7, priority)
     ws.write(row, 8, _type)
     ws.write(row, 9, description)
@@ -653,10 +634,8 @@ def fill_xls(ws, row, task_title, milestone, start_date, end_date, estimated_hou
 
 def update_database(task_id):
     """
-    For updating database after deleting task
+    Updates database when task is to be deleted
     """
-    import pdb
-    pdb.set_trace()
     task_to_delete = Details.query.filter_by(id=task_id).first()
     u = task_to_delete.developer
     Details.query.filter_by(id=task_id).delete()
@@ -668,43 +647,46 @@ def update_database(task_id):
     else:
         update_latest_task.latest_task = "no"
     db.session.commit()
+    return u
 
 
 @app.route('/remove_task/<task_id>', methods=['GET', 'POST'])
 @login_required
 def remove_task(task_id):
     """
-    It is called by user to delete task
+    It is used to remove specific tasks
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     if user.role == 'developer':
         try:
-            update_database(task_id)
-            Details.query.filter_by(id=task_id).delete()
+            u = update_database(task_id)
             db.session.commit()
             flash("Deleted_task")
             return redirect(url_for('developer'))
-        except:
+        except Exception as e:
+            print e
             db.session.rollback()
             flash("Something Went Wrong")
             os.abort(404)
     else:
         try:
-            update_database(task_id)
+            u = update_database(task_id)
             db.session.commit()
             flash("Deleted_task")
-        except:
+            return redirect('/all_tasks/' + u)
+        except Exception as e:
+            print e
             db.session.rollback()
             flash("Something Went Wrong")
 
-    return redirect(url_for('developer'))
+    return redirect(url_for(user.role))
 
 
 @app.route('/update_task/<task_id>', methods=['GET', 'POST'])
 @login_required
 def update_task(task_id):
     """
-    It is used by user to update task details
+    It is used to update tasks
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
 
@@ -733,28 +715,26 @@ def update_task(task_id):
             update_this_task.description = description
             db.session.commit()
             if user.role == "developer":
-                return redirect(url_for('developer'))
+                return redirect(url_for(request.args.get('next')))
             else:
-                return redirect(
-                    '/all_tasks/' + update_this_task.developer)
+                return redirect(request.args.get('next'))
         except Exception as e:
             print e
+
     return redirect(url_for(user.role))
 
 
+@app.route('/all_tasks', methods=['GET', 'POST'])
 @app.route('/all_tasks/<username>', methods=['GET', 'POST'])
 @login_required
-def all_tasks(username):
+def all_tasks(username=""):
     """
-    It is used to download specific task
+    It is used to see all_tasks
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     if user.role == 'admin':
         if request.method == "GET":
             current = User.query.filter_by(username=username).first()
-            # import pdb
-            # pdb.set_trace()
-
             is_there_details = Details.query.filter_by(developer=current.username).first()
             if is_there_details:
                 all_tasks_of = Details.query.filter_by(developer=current.username)
@@ -763,7 +743,15 @@ def all_tasks(username):
                                        all_tasks=all_tasks_of)
             return render_template('all_tasks_of.html', user=user, developer=current)
     else:
-        return redirect(url_for('developer'))
+        if request.method == "GET":
+            current = User.query.filter_by(username=user.username).first()
+            is_there_details = Details.query.filter_by(developer=current.username).first()
+            if is_there_details:
+                all_tasks_of = Details.query.filter_by(developer=current.username)
+
+                return render_template('all_tasks_of.html', user=user, developer=current,
+                                       all_tasks=all_tasks_of)
+            return render_template('all_tasks_of.html', user=user, developer=current)
 
 
 @app.route('/add_new_user', methods=['GET', 'POST'])
@@ -771,8 +759,8 @@ def all_tasks(username):
 def add_new_user():
     """
     It is called by admin to add new developer
-    :return:
-        case 1: if new developer is added successfully then admin is redirected to admin page with Successfully created msg
+        case 1: if new developer is added successfully then admin is redirected to admin page with Successfully created
+        msg
         case 2: if GET method is called then add developer page is rendered with register form
         case 3: if developer tries to load this page developer is redirected to developer page
     """
@@ -785,7 +773,7 @@ def add_new_user():
                             email=form.email.data,
                             password=hashed_password,
                             role=form.role.data,
-                            )
+                            latest_task="no")
             try:
                 db.session.add(new_user)
                 db.session.commit()
@@ -807,7 +795,7 @@ def add_new_user():
 @login_required
 def change_password():
     """
-    It is used for changing password
+    It is used to change password
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     form = ChangePasswordForm()
@@ -839,11 +827,7 @@ def change_password():
 @login_required
 def remove_developer(username):
     """
-    It is called by admin to remove developers
-    :return:
-        case 1: renders remove developer page with current username
-        case 2: if developer tries to load this page developer is redirected to developer page
-    :return:
+    It is used to remove developers
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     if user.role == 'admin':
@@ -866,7 +850,7 @@ def remove_developer(username):
 def logout():
     """
     It logs out current user
-    :return: redirects user to login page
+      redirects user to login page
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     user.logged_in = 0
@@ -879,8 +863,6 @@ def logout():
 def page_not_found(error):
     """
     This method will be called when something goes wrong
-    :param error:
-    :return:
     """
     return render_template('error.html', error=error)
 

@@ -98,12 +98,6 @@
                         {% if all_tasks %}
 
                             <div class="generate_xls">
-{#                                <a href="/download/{{ developer.username }}/{{ task_date }}">#}
-{#                                    <button type="button" class="btn btn-default btn-sm">#}
-{#                                        Generate XLS File#}
-{#                                    </button>#}
-{#                                </a>#}
-
                                 <form class="form-inline" action="/download/{{ developer.username }}/nothing"
                                       method="post" name="quickview" id="quickview">
                                     <div class="form-group">
@@ -115,7 +109,7 @@
                                             <input type="text" class="form-control" id="all_tasks_date"
                                                    name="all_tasks_date"
                                                    value="{{ all_tasks[-1].added_on }}" data-date-end-date="0d">
-                                            <div class="input-group-addon"
+                                            <div class="input-group-addon cursor_pointer"
                                                  onclick="document.getElementById('quickview').submit()">
                                                 <i class="fa fa-download" aria-hidden="true"></i>
                                             </div>
@@ -123,10 +117,6 @@
                                     </div>
                                 </form>
                             </div>
-
-
-
-
                         {% endif %}
                     </div>
                 </div>
@@ -147,7 +137,7 @@
                         <div class="modal-body">
                             <form name="update{{ task.id }}" id="update{{ task.id }}" class="form-horizontal"
                                   method="POST"
-                                  action="/update_task/{{ task.id }}">
+                                  action="{{ url_for('update_task',task_id=task.id, next=request.endpoint) }}">
 
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label" for="project_id">Project ID</label>
