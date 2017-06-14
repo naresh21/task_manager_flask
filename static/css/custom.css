@@ -4752,3 +4752,7 @@ ul.notifications {
 /*.combodate select{*/
     /*width: 17% !important;*/
 /*}*/
+
+.fix_height{
+    min-height: 636px;
+}
