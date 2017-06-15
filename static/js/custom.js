@@ -1,14 +1,21 @@
 function remove_task(task_id) {
     var btn_confirm = confirm('Are you sure you want to delete this Task ?');
     if (btn_confirm) {
-        window.location = "/remove_task/" + task_id
+        // window.location = "/remove_task/" + task_id
+        $.ajax({
+            url: '/remove_task/' + task_id,
+            type: 'POST',
+            success: function () {
+                window.location.reload()
+            }
+        });
     }
 }
 
-function remove_developer(task_id) {
+function remove_developer(username) {
     var btn_confirm = confirm('Are you sure you want to delete this User ?');
     if (btn_confirm) {
-        window.location = "/remove_developer/" + task_id
+        window.location = "/remove_developer/" + username
     }
 }
 

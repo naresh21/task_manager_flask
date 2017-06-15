@@ -29,15 +29,8 @@
                                             <td>
                                                 {{ c.username }}
                                                 <div class="float_right">
-                                                    {#                                                    {% if c.latest != "none" %}#}
-                                                    {#                                                        <a class="float_right_a cursor_pointer" title="Download"#}
-                                                    {#                                                           href="/download/{{ c.username }}/{{ c.latest.replace("/","_") }}">#}
-                                                    {#                                                            <i class="fa fa-download" aria-hidden="true"></i> Download#}
-                                                    {#                                                            Latest Task#}
-                                                    {#                                                        </a>|#}
-                                                    {#                                                    {% endif %}#}
                                                     <a class="float_right_a cursor_pointer"
-                                                       href="all_tasks/{{ c.username }}"
+                                                       href="all_tasks/{{ c.username.replace(" ","_") }}"
                                                        title="Browse All task">
                                                         <i class="fa fa-check-square-o attendance"> Browse All Tasks</i>
                                                     </a> |

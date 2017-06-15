@@ -614,7 +614,7 @@ def fill_xls(ws, row, task_title, milestone, start_date, end_date, estimated_hou
     ws.write(row, 6, _developer)
     ws.write(row, 7, priority)
     ws.write(row, 8, _type)
-    ws.col(9).width = len(description) * 256
+    ws.col(9).width = 100 * 256
     ws.write(row, 9, description.replace("\r\n", "").strip())
 
 
@@ -703,7 +703,8 @@ def update_task(task_id):
             if user.role == "developer":
                 return redirect(url_for(request.args.get('next')))
             else:
-                return redirect(request.args.get('next'))
+                next_url = request.args.get('next') + "/" + update_this_task.developer.replace(" ", "_")
+                return redirect(next_url)
         except Exception as e:
             print e
 
@@ -720,7 +721,7 @@ def all_tasks(username=""):
     user = User.query.filter_by(id=current_user.get_id()).first()
     if user.role == 'admin':
         if request.method == "GET":
-            current = User.query.filter_by(username=username).first()
+            current = User.query.filter_by(username=username.replace("_", " ")).first()
             is_there_details = Details.query.filter_by(developer=current.username).first()
             if is_there_details:
                 all_tasks_of = Details.query.filter_by(developer=current.username)
