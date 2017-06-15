@@ -1,10 +1,3 @@
- _____         _      __  __                                   
-|_   _|_ _ ___| | __ |  \/  | __ _ _ __   __ _  __ _  ___ _ __ 
-  | |/ _` / __| |/ / | |\/| |/ _` | '_ \ / _` |/ _` |/ _ \ '__|
-  | | (_| \__ \   <  | |  | | (_| | | | | (_| | (_| |  __/ |   
-  |_|\__,_|___/_|\_\ |_|  |_|\__,_|_| |_|\__,_|\__, |\___|_|   
-                                               |___/           
-
 # Task Manager using Flask
 
 This project is currently used by Python Developers of DRC Systems.
@@ -37,4 +30,3 @@ For Team Leaders,
     You can easily get every developers latest tasks details.
     You can easily get all developers task details for specific date.
     You can easily get all develoeprs task details project-wise for speicific date.
-  
