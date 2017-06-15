@@ -58,7 +58,6 @@ def index():
 def login():
     """
     When 192.168.1.20 is called login page will be loaded
-     
         case 1: it redirects to admin/developer page if already logged in
         case 2: it redirects to admin/developer page if username and password is correct
         case 3: it redirects to login page again if username and password is incorrect
@@ -89,7 +88,6 @@ def login():
 def admin():
     """
     It is called when admin is logged in into account
-     
         case 1: if admin tries to load this page, then redirects to admin page with developers regarding information
         case 2: if developer tries to load this page, then he/she is redirected to developer page
     """
@@ -119,7 +117,6 @@ def get_perfect_time(estimated_hours):
 def developer():
     """
     It is called when developer is logged in into account
-     
         case 1: if developer is logged in then he/she is redirected to developer page with info
         case 2: if admin tried to load this page admin is redirected to admin page
     """
@@ -199,7 +196,6 @@ def quickview():
 def get_next_date():
     """
     It returns next working date
-      
     """
     today_date = datetime.now()  # converting str to datetime obj
     weekday = calendar.day_name[today_date.weekday()]  # getting day of selected start_date
@@ -218,7 +214,6 @@ def get_next_date():
 def save_tasks():
     """
     Developers uses this for adding their daily tasks
-     
     """
 
     @after_this_request
@@ -286,8 +281,6 @@ def download(username, date):
         current = User.query.filter_by(username=username).first()
         if request.method == "POST":
             date = request.form['all_tasks_date']
-            # import pdb
-            # pdb.set_trace()
             all_tasks_of = Details.query.filter_by(developer=current.username)
             for task in all_tasks_of:
                 if date in task.added_on:
@@ -304,8 +297,6 @@ def download(username, date):
     else:
         if request.method == "POST":
             date = request.form['all_tasks_date']
-            # import pdb
-            # pdb.set_trace()
             all_tasks_of = Details.query.filter_by(developer=user.username)
             for task in all_tasks_of:
                 if date in task.added_on:
@@ -344,14 +335,13 @@ def download_xls_data(user, date):
     """
     Generates XLS file for given user and date
     """
-
     projects = gather_project_titles(date, user.username)
     for project_id in projects:
         row = 1
         try:
             task_details = Details.query.filter_by(developer=user.username, project_id=project_id,
                                                    added_on=date)
-            wb = xlwt.Workbook()
+            wb = xlwt.Workbook(encoding='utf-8')
             ws = wb.add_sheet('Sheet1')
             set_headers(ws)
             for task in task_details:
@@ -384,7 +374,6 @@ def download_xls_data(user, date):
     else:
         zf = zipfile.ZipFile(get_username(user.username) + "_" + date.replace("/", "_") + '.zip', "w")
         for dirname, subdirs, files in os.walk("xls_data"):
-            # zf.write(dirname)
             for filename in files:
                 zf.write(os.path.join(dirname, filename))
         zf.close()
@@ -443,8 +432,6 @@ def download_project_wise(date):
     """
     Downloads xls data project-wise for given date
     """
-    # import pdb
-    # pdb.set_trace()
     projects = gather_project_titles(date, "all")
     for project_id in projects:
         dev_on_this_project = gather_developers(date, project_id)
@@ -486,7 +473,6 @@ def download_project_wise(date):
     else:
         zf = zipfile.ZipFile("Tasks_Project_Wise_" + date.replace("/", "_") + '.zip', "w")
         for dirname, subdirs, files in os.walk("xls_data"):
-            # zf.write(dirname)
             for filename in files:
                 zf.write(os.path.join(dirname, filename))
         zf.close()
@@ -619,7 +605,6 @@ def fill_xls(ws, row, task_title, milestone, start_date, end_date, estimated_hou
     """
     For filling up XLS file
     """
-    # style1 = xlwt.easyxf(num_format_str='DD/MM/YYYY')
     ws.write(row, 0, task_title)
     ws.write(row, 1, milestone)
     ws.write(row, 2, start_date)
@@ -629,12 +614,13 @@ def fill_xls(ws, row, task_title, milestone, start_date, end_date, estimated_hou
     ws.write(row, 6, _developer)
     ws.write(row, 7, priority)
     ws.write(row, 8, _type)
-    ws.write(row, 9, description)
+    ws.col(9).width = len(description) * 256
+    ws.write(row, 9, description.replace("\r\n", "").strip())
 
 
 def update_database(task_id):
     """
-    Updates database when task is to be deleted
+    Updates database when task is to be deleted and returns username
     """
     task_to_delete = Details.query.filter_by(id=task_id).first()
     u = task_to_delete.developer
@@ -849,8 +835,7 @@ def remove_developer(username):
 @login_required
 def logout():
     """
-    It logs out current user
-      redirects user to login page
+    It logs out current user and redirects user to login page
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     user.logged_in = 0
@@ -868,6 +853,4 @@ def page_not_found(error):
 
 
 if __name__ == '__main__':
-    # app.run(debug=True)
     app.run(host='0.0.0.0', port=8080)
-    # app.run()

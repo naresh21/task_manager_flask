@@ -12,7 +12,7 @@ from wtforms.validators import InputRequired, Email, Length, DataRequired
 
 db = SQLAlchemy()
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-target_sql_path = os.path.join(APP_ROOT, 'at_db.db')
+target_sql_path = os.path.join(APP_ROOT, 'xls_data_db.db')
 
 
 class User(UserMixin, db.Model):
@@ -33,7 +33,6 @@ class Details(UserMixin, db.Model):
     Table Structure of Details Table
     """
     id = db.Column(db.Integer, primary_key=True)
-    # project_title = db.Column(db.String(50))
     project_id = db.Column(db.String(200))
     task_title = db.Column(db.String(50))
     milestone = db.Column(db.String(50))
@@ -89,6 +88,4 @@ def get_sql_path():
     This is used to get database path
     :return: returns database path
     """
-    # return 'sqlite:////home/satyakam/WorkSpace_SK/Python_Flask/AT_Tracker/at_db.db'
-    # return 'mysql://root:root@localhost/supervisor_db'
     return 'sqlite:///' + target_sql_path
