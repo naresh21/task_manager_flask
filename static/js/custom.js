@@ -8,7 +8,7 @@ function remove_task(task_id) {
 function remove_developer(task_id) {
     var btn_confirm = confirm('Are you sure you want to delete this User ?');
     if (btn_confirm) {
-        window.location = "/remove_client/" + task_id
+        window.location = "/remove_developer/" + task_id
     }
 }
 
