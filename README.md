@@ -10,7 +10,7 @@
 
     Install All required packages from requirements.txt file
 
-### HOW to use
+### How to use
 
     For Developers,
         Login to your account using credetials provided by Team Leader
