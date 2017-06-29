@@ -1,37 +1,78 @@
 @import url('https://fonts.googleapis.com/css?family=Inconsolata|Quicksand');
+
 /* Body and General Styles Start
 -------------------------------------------------- */
-body {font-family: 'Inconsolata', monospace;height: 100vh;color: #5D82A7;}
+body {
+    font-family: 'Inconsolata', monospace;
+    height: 100vh;
+    color: #5D82A7;
+}
+
 /*inconsolata for body*/
-h1, h2, h3, h4, h5, h6{
+h1, h2, h3, h4, h5, h6 {
     font-family: 'Quicksand', sans-serif;
 }
-.quicksand{font-family: 'Quicksand', sans-serif;}
+
+.quicksand {
+    font-family: 'Quicksand', sans-serif;
+}
+
 /* Body End
 -------------------------------------------------- */
 
 /* header Start
 -------------------------------------------------- */
-#header {}
+#header {
+}
 
 /* header End
 -------------------------------------------------- */
 
 /* navbar Start
 -------------------------------------------------- */
-#nav {}
+#nav {
+}
 
 /* navbar End
 -------------------------------------------------- */
 
 /* content-login Start
 -------------------------------------------------- */
-#content-login .outer{display: table;position: absolute;height: 92vh;width: 100%;}
-#content-login .middle{display: table-cell;vertical-align: middle;text-align: center;}
-#content-login .inner{margin-left: auto;margin-right: auto;width: 50%}
-.Err{float: right;color: red;font-size: 90%;}
-.left{float: left;color: #5D82A7;}
-.title{background-color: #5D82A7;color: white}
+#content-login .outer {
+    display: table;
+    position: absolute;
+    height: 92vh;
+    width: 100%;
+}
+
+#content-login .middle {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+}
+
+#content-login .inner {
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%
+}
+
+.Err {
+    float: right;
+    color: red;
+    font-size: 90%;
+}
+
+.left {
+    float: left;
+    color: #5D82A7;
+}
+
+.title {
+    background-color: #5D82A7;
+    color: white
+}
+
 /* content-login End
 -------------------------------------------------- */
 
@@ -80,23 +121,24 @@ div.tab a:focus, .active {
     height: 100%;
 }
 
-.present{
+.present {
     color: greenyellow;
 }
-.absent{
+
+.absent {
     color: grey;
 }
 
 /* footer Start
 -------------------------------------------------- */
-#footer {}
+#footer {
+}
 
 /* footer End
 -------------------------------------------------- */
 
 /* xyz inner page Start
 -------------------------------------------------- */
-
 
 /* xyz inner page End
 -------------------------------------------------- *

@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <meta name="format-detection" content="telephone=no">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -22,14 +22,11 @@
     <!-- Font Awesome -->
     {#    <link href="../static/font-awesome/css/font-awesome.min.css" rel="stylesheet">#}
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='font-awesome/css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='fonts/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet">
 
-    <!-- NProgress -->
-    <link href="{{ url_for('static', filename='css/nprogress.css') }}" rel="stylesheet">
     <!-- Animate.css -->
     <link href="{{ url_for('static', filename='css/animate.min.css') }}" rel="stylesheet">
     <!-- Custom Theme Style -->
-    <link href="{{ url_for('static', filename='css/css3.css') }}" rel="stylesheet">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link href="{{ url_for('static', filename='css/bootstrap-datepicker3.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/bootstrap-timepicker.css') }}" rel="stylesheet">
@@ -44,7 +41,7 @@
         <div class="col-md-3 left_col">
             <div class="left_col scroll-view">
                 <div class="navbar nav_title border_zero">
-                    <a href="#" class="site_title">
+                    <a href="{{ url_for(user.role) }}" class="site_title">
                         <img src="{{ url_for('static', filename='favicon.ico') }}" width="30px" class="drclogo">
                         <span>DRC Systems</span>
                     </a>
@@ -70,7 +67,7 @@
                             <ul class="nav side-menu">
                                 {% if user.role == "admin" %}
                                     <li><a href="{{ url_for('admin') }}"><i class="fa fa-home"></i> Home </a></li>
-                                    <li><a href="{{ url_for('quickview') }}"><i class="fa fa-desktop"></i> QuickView
+                                    <li><a href="{{ url_for('all_task_details') }}"><i class="fa fa-list"></i> All Tasks Details
                                     </a></li>
 
                                     <li><a href="{{ url_for('add_new_user') }}"><i class="fa fa-user-plus"></i> Add New
@@ -106,7 +103,6 @@
                                     <div class="alert alert-info">No data Available</div>
                                 {% elif msg == "Deleted_task" %}
                                     <div class="alert alert-info">Task is Deleted</div>
-
                                 {% endif %}
                             {% endfor -%}
                         {% endif %}
@@ -119,11 +115,6 @@
         <div class="top_nav">
             <div class="nav_menu">
                 <nav>
-                    {#                    <div class="nav toggle">#}
-                    {#                        <a id="menu_toggle">#}
-                    {#                            <i class="fa fa-bars"></i>#}
-                    {#                        </a>#}
-                    {#                    </div>#}
                     <ul class="nav navbar-nav navbar-right">
                         <li class="">
                             <a href="javascript:" class="user-profile dropdown-toggle" data-toggle="dropdown"
@@ -167,7 +158,7 @@
 <script src="{{ url_for('static', filename='js/cssua.js') }}"></script>
 <script src="{{ url_for('static', filename='js/modernizr-2.8.0.min.js') }}"></script>
 <!-- Custom Theme Scripts -->
-<script src="{{ url_for('static', filename='js/customgen.min.js') }}"></script>
+{#<script src="{{ url_for('static', filename='js/customgen.min.js') }}"></script>#}
 <script src="{{ url_for('static', filename='js/jquery-2.2.3.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/bootstrap-datepicker.min.js') }}"></script>

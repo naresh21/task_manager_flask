@@ -38,24 +38,12 @@ $(document).ready(function () {
     });
 
 
-    // $('#quick_date').change(function () {
-    //     var str = $('#quick_date').val();
-    //     var date_changed = str.replace("/", "_");
-    //     str = date_changed.replace("/", "_");
-    //     console.log(str);
-    //
-    //     $.ajax
-    //     ({
-    //         type: "Post",
-    //         url: "/quickview/" + str,
-    //         success: function (result) {
-    //             // window.location.reload()
-    //         }
-    //     });
-    // });
+    $('#quick_date').change(function () {
+        document.getElementById('quickview').submit();
+    });
 
 
-    $('#estimated_hours').timepicker(
+    $('.estimated_hours').timepicker(
         {
             showMeridian: false,
             defaultTime: '08:00',
@@ -66,18 +54,24 @@ $(document).ready(function () {
         }
     );
 
-    $('#example').DataTable({
-        "scrollY": 200,
-        "scrollX": true
+    $('#search_date').datepicker({
+        format: 'dd/mm/yyyy',
+        autoclose: true
     });
-    $('#tl_table').DataTable({
-        "scrollY": 200,
-        "scrollX": true
+    $('#search_date').change(function () {
+        var date = $('#search_date').datepicker('getDate');
+        alert("hi");
+        document.getElementById('search_query_form').submit();
     });
 
-    $('#tl_table_dashboard').DataTable({
+    $('#custom_data_table').DataTable({
         "scrollY": 500,
-        "scrollX": true
+        "scrollX": true,
+        "searching": false,
+        "bPaginate": false, // to disable pagination of datatables
+        "info": false  // for hiding showing entries text
+        // "order": [[ 1, "desc" ]] for custom default sorting
+        // "lengthMenu": [[10, 20, 30], [10, 20, 30]], // define show entries
     });
 });
 
