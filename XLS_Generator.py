@@ -21,7 +21,7 @@ from flask_paginate import Pagination, get_page_args
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from configs import get_secret_key, get_sql_path, db, User, LoginForm, Details, RegisterForm, ChangePasswordForm
+from configs import get_secret_key, get_sql_path, db, User, Details, RegisterForm, ChangePasswordForm
 
 app = Flask(__name__)
 
@@ -75,19 +75,18 @@ def login():
         if user:
             return redirect(url_for(user.role))
 
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.username.data).first()
+    if request.method == "POST":
+        user = User.query.filter_by(email=request.form['username']).first()
         if user:
-            if check_password_hash(user.password, form.password.data):
-                login_user(user, remember=form.remember.data)
+            if check_password_hash(user.password, request.form['password']):
+                login_user(user, remember=True)
                 return redirect(url_for(user.role))
             else:
                 flash("Invalid username/password")
-                return render_template('login.html', form=form)
+                return render_template('login.html')
         flash("Invalid username/password")
-        return render_template('login.html', form=form)
-    return render_template('login.html', form=form)
+        return render_template('login.html')
+    return render_template('login.html')
 
 
 @app.route('/admin', methods=['GET', 'POST'])
