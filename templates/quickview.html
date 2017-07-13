@@ -11,13 +11,15 @@
                     </h3>
                 </div>
                 <div class="float_right">
-                    <form class="form-inline" action="{{ url_for('quickview') }}" method="post" name="quickview" id="quickview">
+                    <form class="form-inline" action="{{ url_for('admin') }}" method="post" name="quickview"
+                          id="quickview">
                         <div class="form-group">
                             <label class="sr-only" for="quick_date">Quick View of</label>
                             <div class="input-group">
                                 <input type="text" class="form-control" id="quick_date" name="quick_date"
                                        value="{{ date }}" data-date-end-date="0d">
-                                <div class="input-group-addon cursor_pointer" onclick="document.getElementById('quickview').submit()">
+                                <div class="input-group-addon cursor_pointer"
+                                     onclick="document.getElementById('quickview').submit()">
                                     <i class="fa fa-search "
                                        aria-hidden="true"></i></div>
                             </div>
@@ -42,6 +44,7 @@
                                     <th>Dev. Id</th>
                                     <th>Dev. Name</th>
                                     <th>Download Latest</th>
+                                    <th></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -69,6 +72,16 @@
                                                     </a>
                                                 </td>
                                             {% endif %}
+                                            <td>
+                                                <a class="float_right_a cursor_pointer" id="{{ user.username }}"
+                                                   title="Delete {{ user.username.capitalize() }}"
+                                                   onclick="return remove_developer(this.id)">
+
+                                                    <button type="button" class="btn btn-sm">
+                                                        <i class="fa fa-trash-o delete_client" aria-hidden="true"></i>
+                                                    </button>
+                                                </a>
+                                            </td>
                                         </tr>
                                     {% endfor %}
                                 {% endif %}

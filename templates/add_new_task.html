@@ -1,8 +1,4 @@
 {% extends "dashboard.html" %}
-{#{% import "bootstrap/wtf.html" as wtf %}#}
-{% block css %}
-
-{% endblock %}
 {% block page_content %}
     <div class="right_col fix_height" role="main">
         <div>
@@ -14,10 +10,9 @@
                             <h2> Today's Task Details</h2>
                             <ul class="nav navbar-right panel_toolbox">
                                 <li>
-                                    <button type="button"
-                                            class="btn btn-default btn-sm"
+                                    <button type="button" class="btn btn-default btn-sm"
                                             data-toggle="modal"
-                                            data-target="#myModal">
+                                            data-target="#add_new_task_modal">
                                         Add New Task
                                     </button>
                                 </li>
@@ -25,11 +20,29 @@
                             <div class="clearfix"></div>
                         </div>
                         <div class="x_content">
-                            <table id="example" class="table table-bordered" cellspacing="0" width="100%">
+                            {% if pagination %}
+                                <span class="float_left">{{ pagination.links }}</span>
+                                <span class="float_right">
+                                    <form action="{{ url_for('developer') }}" method="get" class="form-inline"
+                                          id="search_query_form">
+                                        <div class="form-group">
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="search_query"
+                                                       name="search_query">
+                                                <div class="input-group-addon cursor_pointer" title="Search"
+                                                     onclick="document.getElementById('search_query_form').submit()">
+                                                    <i class="fa fa-search " aria-hidden="true"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </span>
+                            {% endif %}
+                            <table id="custom_data_table" class="table table-bordered" cellspacing="0" width="100%">
                                 <thead>
                                 <tr>
                                     <th></th>
-                                    <th>Project URL</th>
+                                    <th>Project ID</th>
                                     <th>Task Title</th>
                                     <th>Milestone</th>
                                     <th>Start Date</th>
@@ -51,16 +64,15 @@
                                                    data-target="#modal{{ task.id }}" title="Edit">
                                                     <i class="fa fa-pencil-square-o"></i>
                                                 </a>
-                                                <a class="cursor_pointer delete_client" title="Delete"
-                                                   id="{{ task.id }}"
+                                                <a id="{{ task.id }}" title="Delete"
+                                                   class="cursor_pointer delete_client"
                                                    onclick="return remove_task(this.id)">
                                                     <i class="fa fa-trash-o"></i>
                                                 </a>
                                             </td>
-
                                             <td>
-                                                <a href="http://erp.drcsystems.com/pms/projects/details/{{ task.project_id }}">Click
-                                                    Here </a></td>
+                                                <a href="http://erp.drcsystems.com/pms/projects/details/{{ task.project_id }}">{{ task.project_id }}</a>
+                                            </td>
                                             <td> {{ task.task_title }} </td>
                                             <td> {{ task.milestone }} </td>
                                             <td> {{ task.start_date }} </td>
@@ -72,12 +84,15 @@
                                             <td> {{ task.type }} </td>
                                             <td class="hide_extra"
                                                 title="{{ task.description }}"> {{ task.description }} </td>
-                                            {#                                            <td> {{ task.added_on }} </td>#}
                                         </tr>
                                     {% endfor %}
                                 {% endif %}
                                 </tbody>
                             </table>
+                            {% if pagination %}
+                                <span class="float_left">{{ pagination.links }}</span>
+                                <span class="float_right">{{ pagination.info }}</span>
+                            {% endif %}
                         </div>
                         {% if any_tasks %}
                             <div class="generate_xls">
@@ -96,7 +111,7 @@
 
     {# Add New Task Modal #}
     <!-- Modal -->
-    <div id="myModal" class="modal fade" role="dialog">
+    <div id="add_new_task_modal" class="modal fade" role="dialog">
         <div class="modal-dialog">
             <!-- Modal content-->
             <div class="modal-content">
@@ -107,31 +122,27 @@
                 <div class="modal-body">
                     <form name="add" id="add" class="form-horizontal" method="POST"
                           action="{{ url_for('developer') }}">
-
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="project_id">Project ID</label>
                             <div class="col-sm-10">
                                 <input required type="text" class="form-control" id="project_id"
-                                       name="project_id" placeholder="Enter Project ID">
+                                       name="project_id" placeholder="Enter Project ID" tabindex="1">
                             </div>
                         </div>
-
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="task_title">Task Title</label>
                             <div class="col-sm-10">
                                 <input required type="text" class="form-control" id="task_title"
-                                       name="task_title" placeholder="Enter Task Title">
+                                       name="task_title" placeholder="Enter Task Title" tabindex="2">
                             </div>
                         </div>
-
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="milestone">Milestone</label>
                             <div class="col-sm-10">
                                 <input required type="text" class="form-control" id="milestone" name="milestone"
-                                       placeholder="Enter Milestone">
+                                       placeholder="Enter Milestone" tabindex="3">
                             </div>
                         </div>
-
                         <div class="input-daterange input-group form-group" id="datepicker">
                             <label class="col-sm-2 control-label" for="input_from">Start Date</label>
                             <div class="col-sm-4">
@@ -147,9 +158,9 @@
                         <div class="form-group bootstrap-timepicker">
                             <label class="col-sm-2 control-label" for="estimated_hours">Est. Hours</label>
                             <div class="col-sm-4">
-                                <input style="    text-align: center;" id="estimated_hours" name="estimated_hours"
+                                <input id="estimated_hours" name="estimated_hours"
                                        type="text"
-                                       class="form-control">
+                                       class="form-control estimated_hours text-center">
                             </div>
                         </div>
                         <div class="form-group">
@@ -164,8 +175,6 @@
                                        placeholder="{{ user.username }}" disabled>
                             </div>
                         </div>
-
-
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="priority">Priority</label>
                             <div class="col-sm-4">
@@ -183,20 +192,18 @@
                                 </select>
                             </div>
                         </div>
-
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="description">Description</label>
                             <div class="col-sm-10">
                                         <textarea required class="form-control" rows="3" id="description"
-                                                  name="description"
-                                                  placeholder="Enter Description"></textarea>
+                                                  name="description" placeholder="Enter Description"
+                                                  tabindex="4"></textarea>
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" name="submit"
-                            class="btn btn-default" form="add">
+                    <button type="submit" name="submit" class="btn btn-default" form="add" tabindex="5">
                         Save
                     </button>
                 </div>
@@ -218,33 +225,29 @@
                             <form name="update{{ task.id }}" id="update{{ task.id }}" class="form-horizontal"
                                   method="POST"
                                   action="{{ url_for('update_task',task_id=task.id, next=request.endpoint) }}">
-
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label" for="project_id">Project ID</label>
                                     <div class="col-sm-10">
                                         <input required type="text" class="form-control" id="project_id"
                                                name="project_id" placeholder="Enter Project ID"
-                                               value="{{ task.project_id }}">
+                                               value="{{ task.project_id }}" tabindex="1">
                                     </div>
                                 </div>
-
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label" for="task_title">Task Title</label>
                                     <div class="col-sm-10">
                                         <input required type="text" class="form-control" id="task_title"
                                                name="task_title" placeholder="Enter Task Title"
-                                               value="{{ task.task_title }}">
+                                               value="{{ task.task_title }}" tabindex="2">
                                     </div>
                                 </div>
-
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label" for="milestone">Milestone</label>
                                     <div class="col-sm-10">
                                         <input required type="text" class="form-control" id="milestone" name="milestone"
-                                               placeholder="Enter Milestone" value="{{ task.milestone }}">
+                                               placeholder="Enter Milestone" value="{{ task.milestone }}" tabindex="3">
                                     </div>
                                 </div>
-
                                 <div class="input-daterange input-group form-group" id="datepicker">
                                     <label class="col-sm-2 control-label" for="input_from">Start Date</label>
                                     <div class="col-sm-4">
@@ -259,11 +262,11 @@
                                     </div>
                                 </div>
                                 <div class="form-group bootstrap-timepicker">
-                                    <label class="col-sm-2 control-label" for="estimated_hours{{ task.id }}">Est. Hours</label>
+                                    <label class="col-sm-2 control-label" for="estimated_hours">Est. Hours</label>
                                     <div class="col-sm-4">
-                                        <input style="text-align: center;" id="estimated_hours{{ task.id }}"
+                                        <input id="estimated_hours"
                                                name="estimated_hours" type="text"
-                                               class="form-control"
+                                               class="form-control estimated_hours text-center"
                                                value="{{ task.estimated_hours.split(":")[0] }}:{{ task.estimated_hours.split(":")[1] }}">
                                     </div>
                                 </div>
@@ -279,8 +282,6 @@
                                                placeholder="{{ user.username }}" disabled>
                                     </div>
                                 </div>
-
-
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label" for="priority">Priority</label>
                                     <div class="col-sm-4">
@@ -313,50 +314,26 @@
                                         </select>
                                     </div>
                                 </div>
-
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label" for="description">Description</label>
                                     <div class="col-sm-10">
                                         <textarea required class="form-control" rows="3" id="description"
                                                   name="description"
-                                                  placeholder="Enter Description">{{ task.description }}</textarea>
+                                                  placeholder="Enter Description"
+                                                  tabindex="4">{{ task.description }}</textarea>
                                     </div>
                                 </div>
-
-
                             </form>
                         </div>
                         <div class="modal-footer">
-                            <button type="submit" name="submit"
-                                    class="btn btn-default" form="update{{ task.id }}">
+                            <button type="submit" name="submit" class="btn btn-default" form="update{{ task.id }}"
+                                    tabindex="5">
                                 Save
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
-
-
-        {% endfor %}
-    {% endif %}
-{% endblock %}
-
-{% block js %}
-
-    {% if today %}
-        {% for task in today %}
-            <script>
-                $('#estimated_hours{{ task.id }}').timepicker(
-                    {
-                        showMeridian: false,
-                        defaultTime: '08:00',
-                        icons: {
-                            up: 'fa fa-sort-up',
-                            down: 'fa fa-sort-down'
-                        }
-                    }
-                );
-            </script>
         {% endfor %}
     {% endif %}
 {% endblock %}

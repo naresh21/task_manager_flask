@@ -1,36 +1,28 @@
 {% extends "dashboard.html" %}
 {% block css %}
     <link href="{{ url_for('static', filename='css/jquery.dataTables.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/qunit.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/datetime.css') }}" rel="stylesheet">
 {% endblock %}
 {% block page_content %}
     <div class="right_col fix_height" role="main">
         <div>
+            <div class="page-title">
+                <div class="title_left">
+                    <h3>
+                        All Tasks Details
+                    </h3>
+                </div>
+            </div>
+            <div class="clearfix"></div>
             <div class="row">
                 <div class="col-md-12">
                     <div class="x_panel">
-                        <div class="x_title">
-                            {% if user.role == "developer" %}
-                                <h2> All Tasks </h2>
-                            {% else %}
-                                <h2> Tasks Details of {{ developer.username }} </h2>
-                            {% endif %}
-                            <div class="clearfix"></div>
-
-                        </div>
                         <div class="x_content">
-                            {% if pagination %}
+                            {% if all_details %}
                                 <span class="float_left">{{ pagination.links }}</span>
                                 <span class="float_right">
-                                {% if user.role == "admin" %}
-                                    <form action="{{ url_for('all_tasks',username=developer.username) }}" method="get" class="form-inline"
+                                    <form action="{{ url_for('all_task_details') }}" method="get" class="form-inline"
                                           id="search_query_form">
-                                {% else %}
-                                    <form action="{{ url_for('all_tasks') }}" method="get" class="form-inline"
-                                          id="search_query_form">
-                                {% endif %}
-                                    <div class="form-group">
+                                        <div class="form-group">
                                             <div class="input-group">
                                                 <input type="text" class="form-control" id="search_query"
                                                        name="search_query">
@@ -41,29 +33,28 @@
                                             </div>
                                         </div>
                                     </form>
-                                    </span>
-                            {% endif %}
-                            <table id="custom_data_table" class="table table-bordered" cellspacing="0" width="100%">
-                                <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>Added On</th>
-                                    <th>Project ID</th>
-                                    <th>Task Title</th>
-                                    <th>Milestone</th>
-                                    <th>Start Date</th>
-                                    <th>End Date</th>
-                                    <th>Est. Hours</th>
-                                    <th>QA</th>
-                                    <th>Developer</th>
-                                    <th>Priority</th>
-                                    <th>Type</th>
-                                    <th>Description</th>
-                                </tr>
-                                </thead>
-                                {% if all_tasks %}
+                                </span>
+                                <table id="custom_data_table" class="table table-bordered" cellspacing="0"
+                                       width="100%">
+                                    <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Task Added On</th>
+                                        <th>Project ID</th>
+                                        <th>Task Title</th>
+                                        <th>Milestone</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Est. Hours</th>
+                                        <th>QA</th>
+                                        <th>Developer</th>
+                                        <th>Priority</th>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                    </tr>
+                                    </thead>
                                     <tbody>
-                                    {% for task in all_tasks %}
+                                    {% for task in all_details %}
                                         <tr>
                                             <td>
                                                 <a class="cursor_pointer" data-toggle="modal"
@@ -76,9 +67,7 @@
                                                     <i class="fa fa-trash-o"></i>
                                                 </a>
                                             </td>
-
-
-                                            <td> {{ task.added_on }} </td>
+                                            <td>{{ task.added_on }}</td>
                                             <td>
                                                 <a href="http://erp.drcsystems.com/pms/projects/details/{{ task.project_id }}">{{ task.project_id }} </a>
                                             </td>
@@ -88,73 +77,46 @@
                                             <td> {{ task.end_date }} </td>
                                             <td> {{ task.estimated_hours }} </td>
                                             <td> {{ task.qa }} </td>
-                                            <td> {{ task.developer }} </td>
+                                            <td><a href="/all_tasks/{{ task.developer }}"
+                                                   title="Browse All">
+                                                {{ task.developer }}
+                                            </a></td>
                                             <td> {{ task.priority }} </td>
                                             <td> {{ task.type }} </td>
                                             <td class="hide_extra"
                                                 title="{{ task.description }}"> {{ task.description }} </td>
-
                                         </tr>
                                     {% endfor %}
                                     </tbody>
-                                {% else %}
+                                </table>
+                                <span class="float_left">{{ pagination.links }}</span>
+                                <span class="float_right">{{ pagination.info }}</span>
+                            {% else %}
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th> Tasks Added On</th>
+                                        <th> Download</th>
+                                    </tr>
+                                    </thead>
                                     <tbody>
                                     <tr>
                                         <td>
-
+                                            No Data Available
                                         </td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
                                     </tr>
                                     </tbody>
-                                {% endif %}
-                            </table>
-                            {% if pagination %}
-                                <span class="float_left">{{ pagination.links }}</span>
-                                <span class="float_right">{{ pagination.info }}</span>
+                                </table>
                             {% endif %}
                         </div>
-                        {% if all_tasks %}
-                            {% if all_tasks[0] %}
-                            <div class="generate_xls">
-                                <form class="form-inline" action="/download/{{ developer.username }}/nothing"
-                                      method="post" name="quickview" id="quickview">
-                                    <div class="form-group">
-                                        <label class="sr-only" for="quick_date">Generate XLS File of </label>
-                                        <div class="input-group">
-                                            <div class="input-group-addon">
-                                                Download XLS of
-                                            </div>
-                                            <input type="text" class="form-control" id="all_tasks_date"
-                                                   name="all_tasks_date"
-                                                   value="{{ all_tasks[0].added_on }}" data-date-end-date="0d">
-                                            <div class="input-group-addon cursor_pointer"
-                                                 onclick="document.getElementById('quickview').submit()">
-                                                <i class="fa fa-download" aria-hidden="true"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                                {% endif %}
-                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {% if all_tasks %}
-        {% for task in all_tasks %}
+    {% if all_details %}
+        {% for task in all_details %}
             <div id="modal{{ task.id }}" class="modal fade" role="dialog">
                 <div class="modal-dialog">
                     <!-- Modal content-->
@@ -166,7 +128,7 @@
                         <div class="modal-body">
                             <form name="update{{ task.id }}" id="update{{ task.id }}" class="form-horizontal"
                                   method="POST"
-                                  action="{{ url_for('update_task',task_id=task.id, next=request.endpoint+"/"+task.developer) }}">
+                                  action="{{ url_for('update_task',task_id=task.id, next=request.endpoint) }}">
 
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label" for="project_id">Project ID</label>
@@ -208,10 +170,10 @@
                                     </div>
                                 </div>
                                 <div class="form-group bootstrap-timepicker">
-                                    <label class="col-sm-2 control-label" for="estimated_hours{{ task.id }}">Est.
+                                    <label class="col-sm-2 control-label" for="estimated_hours">Est.
                                         Hours</label>
                                     <div class="col-sm-4">
-                                        <input id="estimated_hours{{ task.id }}"
+                                        <input id="estimated_hours"
                                                name="estimated_hours" type="text"
                                                class="form-control estimated_hours text-center"
                                                value="{{ task.estimated_hours.split(":")[0] }}:{{ task.estimated_hours.split(":")[1] }}">
@@ -229,6 +191,8 @@
                                                placeholder="{{ task.developer }}" disabled>
                                     </div>
                                 </div>
+
+
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label" for="priority">Priority</label>
                                     <div class="col-sm-4">

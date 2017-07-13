@@ -7,6 +7,7 @@ import os
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
+
 from wtforms import StringField, PasswordField, BooleanField, SelectField
 from wtforms.validators import InputRequired, Email, Length, DataRequired
 
@@ -17,7 +18,7 @@ target_sql_path = os.path.join(APP_ROOT, 'xls_data_db.db')
 
 class User(UserMixin, db.Model):
     """
-    This class is used for user table
+    This class is used for User table
     """
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True)
@@ -25,7 +26,6 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(80))
     role = db.Column(db.String(10))
     latest_task = db.Column(db.String(10))
-    # logged_in = db.Column(db.BOOLEAN, default=0)
 
 
 class Details(UserMixin, db.Model):
@@ -45,15 +45,6 @@ class Details(UserMixin, db.Model):
     type = db.Column(db.String(50))
     description = db.Column(db.String(500))
     added_on = db.Column(db.String(10))
-
-
-class LoginForm(FlaskForm):
-    """
-    This class is used for login form
-    """
-    username = StringField('Username', validators=[InputRequired(), Length(min=5, max=50)])
-    password = PasswordField('Password', validators=[InputRequired(), Length(min=3, max=80)])
-    remember = BooleanField('Remember Me')
 
 
 class RegisterForm(FlaskForm):

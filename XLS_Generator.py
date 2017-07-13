@@ -2,34 +2,41 @@
 """
 This application is used to manage employees's task submissions
 Task Manager for DRC Systems
-Developed by: Satyakam Pandya, Dharm Shah
+Developed by: Satyakam Pandya
 """
 import calendar
+import click
 import glob
 import os
+import xlwt
 import zipfile
+
 from datetime import datetime, timedelta
 
-import xlwt
 from flask import Flask, redirect, url_for, flash, render_template, request, send_file, after_this_request
+from flask import current_app
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
+from flask_paginate import Pagination, get_page_args
+
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from configs import get_secret_key, get_sql_path, db, User, LoginForm, Details, RegisterForm, ChangePasswordForm
+from configs import get_secret_key, get_sql_path, db, User, Details, RegisterForm, ChangePasswordForm
 
 app = Flask(__name__)
+
+click.disable_unicode_literals_warning = True
+
+app.config.from_pyfile('app.cfg')
 app.config['SECRET_KEY'] = get_secret_key()
 app.config['SQLALCHEMY_DATABASE_URI'] = get_sql_path()
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
 Bootstrap(app)
+db.init_app(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-
-db.init_app(app)
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 target_save_path = os.path.join(APP_ROOT, 'xls_data/')
@@ -68,22 +75,21 @@ def login():
         if user:
             return redirect(url_for(user.role))
 
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.username.data).first()
+    if request.method == "POST":
+        user = User.query.filter_by(email=request.form['username']).first()
         if user:
-            if check_password_hash(user.password, form.password.data):
-                login_user(user, remember=form.remember.data)
+            if check_password_hash(user.password, request.form['password']):
+                login_user(user, remember=True)
                 return redirect(url_for(user.role))
             else:
                 flash("Invalid username/password")
-                return render_template('login.html', form=form)
+                return render_template('login.html')
         flash("Invalid username/password")
-        return render_template('login.html', form=form)
-    return render_template('login.html', form=form)
+        return render_template('login.html')
+    return render_template('login.html')
 
 
-@app.route('/admin')
+@app.route('/admin', methods=['GET', 'POST'])
 @login_required
 def admin():
     """
@@ -93,12 +99,104 @@ def admin():
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     if user.role == 'admin':
-        all_users = User.query.filter_by(role="developer")
-        all_details = Details.query.all()
+        if request.method == "GET":
+            date = datetime.now().strftime("%d/%m/%Y")
 
-        return render_template('all_developer.html', user=user, developers=all_users, all_details=all_details)
+        else:
+            date = request.form['quick_date']
+        all_users = User.query.filter_by(role="developer").order_by(User.username.asc()).all()
+        present = []
+        absent = []
+        for users in all_users:
+            last_id = Details.query.filter_by(developer=users.username, added_on=date).first()
+            if last_id:
+                present.append(users.username)
+            else:
+                absent.append(users.username)
+        return render_template('quickview.html', user=user, all_users=all_users,
+                               present=present, absent=absent, date=date)
+
     else:
         return redirect(url_for('developer'))
+
+
+@app.route('/all_task_details', methods=['GET', 'POST'])
+@login_required
+def all_task_details():
+    """
+    All task details of developer
+    """
+    user = User.query.filter_by(id=current_user.get_id()).first()
+    if user.role == 'admin':
+        page, per_page, offset = get_page_args(page_parameter='page',
+                                               per_page_parameter='per_page')
+        if request.args.get('search_query', None):
+            search_query = request.args['search_query'].strip()
+
+            total = Details.query.filter(
+                (Details.task_title.like("%" + search_query + "%")) |
+                (Details.project_id.like("%" + search_query + "%")) |
+                (Details.milestone.like("%" + search_query + "%")) |
+                (Details.start_date.like("%" + search_query + "%")) |
+                (Details.end_date.like("%" + search_query + "%")) |
+                (Details.estimated_hours.like("%" + search_query + "%")) |
+                (Details.qa.like("%" + search_query + "%")) |
+                (Details.developer.like("%" + search_query + "%")) |
+                (Details.priority.like("%" + search_query + "%")) |
+                (Details.type.like("%" + search_query + "%")) |
+                (Details.description.like("%" + search_query + "%")) |
+                (Details.added_on.like("%" + search_query + "%"))).count()
+            all_details = Details.query.filter(
+                (Details.task_title.like("%" + search_query + "%")) |
+                (Details.project_id.like("%" + search_query + "%")) |
+                (Details.milestone.like("%" + search_query + "%")) |
+                (Details.start_date.like("%" + search_query + "%")) |
+                (Details.end_date.like("%" + search_query + "%")) |
+                (Details.estimated_hours.like("%" + search_query + "%")) |
+                (Details.qa.like("%" + search_query + "%")) |
+                (Details.developer.like("%" + search_query + "%")) |
+                (Details.priority.like("%" + search_query + "%")) |
+                (Details.type.like("%" + search_query + "%")) |
+                (Details.description.like("%" + search_query + "%")) |
+                (Details.added_on.like("%" + search_query + "%"))).limit(
+                per_page).offset(offset)
+            record_name = 'Search Result'
+        else:
+            total = Details.query.count()
+            all_details = Details.query.order_by(Details.added_on.desc()).limit(per_page).offset(
+                offset)
+            record_name = 'All Task Details'
+
+        pagination = get_pagination(page=page,
+                                    per_page=per_page,
+                                    total=total,
+                                    record_name=record_name,
+                                    format_total=True,
+                                    format_number=True)
+
+        return render_template('all_task_details.html', all_details=all_details, page=page,
+                               per_page=per_page, user=user, pagination=pagination)
+
+    return redirect(url_for('developer'))  # project_id
+
+
+# task_title
+# milestone
+# start_date
+# end_date
+# estimated_hours
+# qa
+# developer
+# priority
+# type
+# description
+# added_on
+
+#
+# def get_count(q):
+#     count_q = q.statement.with_only_columns([func.count()]).order_by(None)
+#     count = q.session.execute(count_q).scalar()
+#     return count
 
 
 def get_perfect_time(estimated_hours):
@@ -133,7 +231,6 @@ def developer():
             priority = request.form['priority']
             _type = request.form['type']
             description = request.form['description']
-
             try:
                 new_task_entry = Details(project_id=project_id,
                                          task_title=task_title,
@@ -157,40 +254,134 @@ def developer():
             is_task = Details.query.filter_by(developer=user.username,
                                               added_on=datetime.now().strftime("%d/%m/%Y")).first()
             if is_task:
-                today_task_details = Details.query.filter_by(developer=user.username,
-                                                             added_on=datetime.now().strftime("%d/%m/%Y"))
+
+                page, per_page, offset = get_page_args(page_parameter='page',
+                                                       per_page_parameter='per_page')
+                if request.args.get('search_query', None):
+                    search_query = request.args['search_query'].strip()
+                    total_today_task_details = Details.query.filter_by(developer=user.username,
+                                                                       added_on=datetime.now().strftime("%d/%m/%Y")). \
+                        filter((Details.task_title.like("%" + search_query + "%")) |
+                               (Details.project_id.like("%" + search_query + "%")) |
+                               (Details.milestone.like("%" + search_query + "%")) |
+                               (Details.start_date.like("%" + search_query + "%")) |
+                               (Details.end_date.like("%" + search_query + "%")) |
+                               (Details.estimated_hours.like("%" + search_query + "%")) |
+                               (Details.qa.like("%" + search_query + "%")) |
+                               (Details.developer.like("%" + search_query + "%")) |
+                               (Details.priority.like("%" + search_query + "%")) |
+                               (Details.type.like("%" + search_query + "%")) |
+                               (Details.description.like("%" + search_query + "%")) |
+                               (Details.added_on.like("%" + search_query + "%"))).count()
+                    today_task_details = Details.query.filter_by(developer=user.username,
+                                                                 added_on=datetime.now().strftime("%d/%m/%Y")). \
+                        filter((Details.task_title.like("%" + search_query + "%")) |
+                               (Details.project_id.like("%" + search_query + "%")) |
+                               (Details.milestone.like("%" + search_query + "%")) |
+                               (Details.start_date.like("%" + search_query + "%")) |
+                               (Details.end_date.like("%" + search_query + "%")) |
+                               (Details.estimated_hours.like("%" + search_query + "%")) |
+                               (Details.qa.like("%" + search_query + "%")) |
+                               (Details.developer.like("%" + search_query + "%")) |
+                               (Details.priority.like("%" + search_query + "%")) |
+                               (Details.type.like("%" + search_query + "%")) |
+                               (Details.description.like("%" + search_query + "%")) |
+                               (Details.added_on.like("%" + search_query + "%"))).limit(
+                        per_page).offset(offset)
+                    record_name = 'Search Result'
+                else:
+                    total_today_task_details = Details.query.filter_by(developer=user.username,
+                                                                       added_on=datetime.now().strftime(
+                                                                           "%d/%m/%Y")).count()
+                    today_task_details = Details.query.filter_by(developer=user.username,
+                                                                 added_on=datetime.now().strftime("%d/%m/%Y")).limit(
+                        per_page).offset(offset)
+                    record_name = "Today's Task Details"
+
+                pagination = get_pagination(page=page,
+                                            per_page=per_page,
+                                            total=total_today_task_details,
+                                            record_name=record_name,
+                                            format_total=True,
+                                            format_number=True,
+                                            )
                 return render_template("add_new_task.html", user=user, any_tasks=True, today=today_task_details,
-                                       formatted_date=formatted_date)
+                                       formatted_date=formatted_date, page=page, per_page=per_page,
+                                       pagination=pagination)
             else:
                 return render_template("add_new_task.html", user=user, any_tasks=False, formatted_date=formatted_date)
     return redirect(url_for('admin'))
 
 
-@app.route('/quickview', methods=['GET', 'POST'])
+@app.route('/all_tasks', methods=['GET', 'POST'])
+@app.route('/all_tasks/<username>', methods=['GET', 'POST'])
 @login_required
-def quickview():
+def all_tasks(username=""):
     """
-    It is called by admin to have a quickview of task details
+    It is used to see all_tasks
     """
     user = User.query.filter_by(id=current_user.get_id()).first()
     if user.role == 'admin':
-        if request.method == "GET":
-            date = datetime.now().strftime("%d/%m/%Y")
+        if username:
+            current = User.query.filter_by(username=username).first()
         else:
-            date = request.form['quick_date']
-        all_users = User.query.filter_by(role="developer").all()
-        present = []
-        absent = []
-        for users in all_users:
-            last_id = Details.query.filter_by(developer=users.username, added_on=date).first()
-            if last_id:
-                present.append(users.username)
-            else:
-                absent.append(users.username)
-        return render_template('quickview.html', user=user, all_users=all_users,
-                               present=present, absent=absent, date=date)
+            return redirect(user.role)
+    else:
+        current = User.query.filter_by(username=user.username).first()
+    if current:
+        is_there_details = Details.query.filter_by(developer=current.username).first()
+        if is_there_details:
+            page, per_page, offset = get_page_args(page_parameter='page',
+                                                   per_page_parameter='per_page')
+            if request.args.get('search_query', None):
+                search_query = request.args['search_query'].strip()
+                total_all_tasks_of = Details.query.filter_by(developer=current.username).filter(
+                    (Details.task_title.like("%" + search_query + "%")) |
+                    (Details.project_id.like("%" + search_query + "%")) |
+                    (Details.milestone.like("%" + search_query + "%")) |
+                    (Details.start_date.like("%" + search_query + "%")) |
+                    (Details.end_date.like("%" + search_query + "%")) |
+                    (Details.estimated_hours.like("%" + search_query + "%")) |
+                    (Details.qa.like("%" + search_query + "%")) |
+                    (Details.developer.like("%" + search_query + "%")) |
+                    (Details.priority.like("%" + search_query + "%")) |
+                    (Details.type.like("%" + search_query + "%")) |
+                    (Details.description.like("%" + search_query + "%")) |
+                    (Details.added_on.like("%" + search_query + "%"))).count()
 
-    return redirect(url_for('developer'))
+                all_tasks_of = Details.query.filter_by(developer=current.username).filter(
+                    (Details.task_title.like("%" + search_query + "%")) |
+                    (Details.project_id.like("%" + search_query + "%")) |
+                    (Details.milestone.like("%" + search_query + "%")) |
+                    (Details.start_date.like("%" + search_query + "%")) |
+                    (Details.end_date.like("%" + search_query + "%")) |
+                    (Details.estimated_hours.like("%" + search_query + "%")) |
+                    (Details.qa.like("%" + search_query + "%")) |
+                    (Details.developer.like("%" + search_query + "%")) |
+                    (Details.priority.like("%" + search_query + "%")) |
+                    (Details.type.like("%" + search_query + "%")) |
+                    (Details.description.like("%" + search_query + "%")) |
+                    (Details.added_on.like("%" + search_query + "%"))).limit(
+                    per_page).offset(offset)
+                record_name = 'Search Result'
+            else:
+                total_all_tasks_of = Details.query.filter_by(developer=current.username).count()
+
+                all_tasks_of = Details.query.filter_by(developer=current.username).order_by(
+                    Details.added_on.desc()). \
+                    limit(per_page).offset(offset)
+                record_name = 'All Tasks of ' + str(current.username)
+
+            pagination = get_pagination(page=page,
+                                        per_page=per_page,
+                                        total=total_all_tasks_of,
+                                        record_name=record_name,
+                                        format_total=True,
+                                        format_number=True)
+            return render_template('all_tasks_of.html', user=user, developer=current,
+                                   all_tasks=all_tasks_of, page=page, per_page=per_page, pagination=pagination)
+        return render_template('all_tasks_of.html', user=user, developer=current)
+    return redirect(user.role)
 
 
 def get_next_date():
@@ -207,6 +398,190 @@ def get_next_date():
 
     formatted_date = datetime.strftime(modified_date1, "%d/%m/%Y")  # yyyy-mm-dd to dd/mm/yyyy
     return formatted_date
+
+
+def update_database(task_id):
+    """
+    Updates database when task is to be deleted and returns username
+    """
+    task_to_delete = Details.query.filter_by(id=task_id).first()
+    u = task_to_delete.developer
+    Details.query.filter_by(id=task_id).delete()
+    latest_task = Details.query.filter_by(developer=u).first()
+    update_latest_task = User.query.filter_by(username=u).first()
+    if latest_task:
+        latest_task = Details.query.filter_by(developer=u).all()
+        update_latest_task.latest_task = latest_task[-1].added_on
+    else:
+        update_latest_task.latest_task = "no"
+    db.session.commit()
+    return u
+
+
+@app.route('/remove_task/<task_id>', methods=['GET', 'POST'])
+@login_required
+def remove_task(task_id):
+    """
+    It is used to remove specific tasks
+    """
+    user = User.query.filter_by(id=current_user.get_id()).first()
+    if user.role == 'developer':
+        try:
+            u = update_database(task_id)
+            db.session.commit()
+            flash("Deleted_task")
+            return redirect(url_for('developer'))
+        except Exception as e:
+            print e
+            db.session.rollback()
+            flash("Something Went Wrong")
+            os.abort(404)
+    else:
+        try:
+            u = update_database(task_id)
+            db.session.commit()
+            flash("Deleted_task")
+            return redirect('/all_tasks/' + u)
+        except Exception as e:
+            print e
+            db.session.rollback()
+            flash("Something Went Wrong")
+
+    return redirect(url_for(user.role))
+
+
+@app.route('/update_task/<task_id>', methods=['GET', 'POST'])
+@login_required
+def update_task(task_id):
+    """
+    It is used to update tasks
+    """
+    user = User.query.filter_by(id=current_user.get_id()).first()
+
+    if request.method == "POST":
+        project_id = request.form['project_id']
+        task_title = request.form['task_title']
+        milestone = request.form['milestone']
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        estimated_hours = request.form['estimated_hours']
+        qa = request.form['qa']
+        priority = request.form['priority']
+        _type = request.form['type']
+        description = request.form['description']
+        try:
+            update_this_task = Details.query.filter_by(id=task_id).first()
+            update_this_task.project_id = project_id
+            update_this_task.task_title = task_title
+            update_this_task.milestone = milestone
+            update_this_task.start_date = start_date
+            update_this_task.end_date = end_date
+            update_this_task.estimated_hours = get_perfect_time(estimated_hours)
+            update_this_task.qa = qa
+            update_this_task.priority = priority
+            update_this_task.type = _type
+            update_this_task.description = description
+            db.session.commit()
+            if user.role == "developer":
+                return redirect(request.args.get('next'))
+            else:
+                next_url = request.args.get('next')
+                return redirect(next_url)
+        except Exception as e:
+            print e
+
+    return redirect(url_for(user.role))
+
+
+@app.route('/add_new_user', methods=['GET', 'POST'])
+@login_required
+def add_new_user():
+    """
+    It is called by admin to add new developer
+        case 1: if new developer is added successfully then admin is redirected to admin page with Successfully created
+        msg
+        case 2: if GET method is called then add developer page is rendered with register form
+        case 3: if developer tries to load this page developer is redirected to developer page
+    """
+    user = User.query.filter_by(id=current_user.get_id()).first()
+    if user.role == 'admin':
+        form = RegisterForm()
+        if form.validate_on_submit():
+            hashed_password = generate_password_hash(form.password.data, method='sha256')
+            new_user = User(username=form.username.data,
+                            email=form.email.data,
+                            password=hashed_password,
+                            role=form.role.data,
+                            latest_task="no")
+            try:
+                db.session.add(new_user)
+                db.session.commit()
+                flash("Added")
+                return redirect(url_for('admin'))
+            except Exception as e:
+                db.session.rollback()
+                print e
+                flash("Username/Email already Exists")
+                return render_template('add_new_user.html',
+                                       form=form,
+                                       user=user)
+
+        return render_template('add_new_user.html', form=form, user=user)
+    return redirect(url_for('developer'))
+
+
+@app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    """
+    It is used to change password
+    """
+    user = User.query.filter_by(id=current_user.get_id()).first()
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+
+        if check_password_hash(user.password, form.current_password.data):
+            if form.new_password.data == form.confirm_password.data \
+                    and form.new_password.data != form.current_password.data:
+                hashed_password = generate_password_hash(form.new_password.data, method='sha256')
+                user.password = hashed_password
+                db.session.commit()
+                flash("Success")
+                return redirect(url_for(user.role))
+            else:
+                flash("Both password should be same and differ from current password")
+                if user.role == "developer":
+                    return render_template("change_password.html",
+                                           user=user,
+                                           form=form)
+        else:
+            flash("Please enter old password correctly")
+            return render_template("change_password.html",
+                                   user=user,
+                                   form=form)
+    return render_template("change_password.html", form=form, user=user)
+
+
+@app.route('/remove_developer/<username>', methods=['GET', 'POST'])
+@login_required
+def remove_developer(username):
+    """
+    It is used to remove developers
+    """
+    user = User.query.filter_by(id=current_user.get_id()).first()
+    if user.role == 'admin':
+        try:
+            User.query.filter_by(username=username).delete()
+            Details.query.filter_by(developer=username).delete()
+            db.session.commit()
+            flash("Deleted")
+            return redirect(url_for('admin'))
+
+        except Exception as e:
+            print e
+            os.abort(404)
+
+    return redirect(url_for('developer'))
 
 
 @app.route('/save_tasks', methods=['GET', 'POST'])
@@ -282,18 +657,18 @@ def download(username, date):
         if request.method == "POST":
             date = request.form['all_tasks_date']
             all_tasks_of = Details.query.filter_by(developer=current.username)
-            for task in all_tasks_of:
-                if date in task.added_on:
-                    generated_file = download_xls_data(current, date.replace("_", "/"))
-                    return send_file(generated_file,
-                                     as_attachment=True,
-                                     attachment_filename=generated_file.split("/")[-1])
+            if all_tasks_of:
+                for task in all_tasks_of:
+                    if date in task.added_on:
+                        generated_file = download_xls_data(current, date.replace("_", "/"))
+                        return send_file(generated_file,
+                                         as_attachment=True,
+                                         attachment_filename=generated_file.split("/")[-1])
 
             flash("NoData")
-            return redirect('/all_tasks/' + all_tasks_of[0].developer)
+            return redirect('/all_tasks/' + current.username)
 
         generated_file = download_xls_data(current, date.replace("_", "/"))
-
     else:
         if request.method == "POST":
             date = request.form['all_tasks_date']
@@ -383,7 +758,7 @@ def download_xls_data(user, date):
 
 def gather_developers(date, project_id):
     """
-    Ii gathers developer names for given date and project_id
+    It gathers developer names for given date and project_id
     """
     developers_details = Details.query.filter_by(project_id=project_id, added_on=date)
     all_devs = []
@@ -441,8 +816,6 @@ def download_project_wise(date):
             ws = wb.add_sheet('Sheet1')
             set_headers(ws)
             for dev in dev_on_this_project:
-                # print project_id
-                # print dev
                 task_details = Details.query.filter_by(developer=dev, project_id=project_id,
                                                        added_on=date)
                 for task in task_details:
@@ -618,220 +991,6 @@ def fill_xls(ws, row, task_title, milestone, start_date, end_date, estimated_hou
     ws.write(row, 9, description.replace("\r\n", "").strip())
 
 
-def update_database(task_id):
-    """
-    Updates database when task is to be deleted and returns username
-    """
-    task_to_delete = Details.query.filter_by(id=task_id).first()
-    u = task_to_delete.developer
-    Details.query.filter_by(id=task_id).delete()
-    latest_task = Details.query.filter_by(developer=u).first()
-    update_latest_task = User.query.filter_by(username=u).first()
-    if latest_task:
-        latest_task = Details.query.filter_by(developer=u).all()
-        update_latest_task.latest_task = latest_task[-1].added_on
-    else:
-        update_latest_task.latest_task = "no"
-    db.session.commit()
-    return u
-
-
-@app.route('/remove_task/<task_id>', methods=['GET', 'POST'])
-@login_required
-def remove_task(task_id):
-    """
-    It is used to remove specific tasks
-    """
-    user = User.query.filter_by(id=current_user.get_id()).first()
-    if user.role == 'developer':
-        try:
-            u = update_database(task_id)
-            db.session.commit()
-            flash("Deleted_task")
-            return redirect(url_for('developer'))
-        except Exception as e:
-            print e
-            db.session.rollback()
-            flash("Something Went Wrong")
-            os.abort(404)
-    else:
-        try:
-            u = update_database(task_id)
-            db.session.commit()
-            flash("Deleted_task")
-            return redirect('/all_tasks/' + u)
-        except Exception as e:
-            print e
-            db.session.rollback()
-            flash("Something Went Wrong")
-
-    return redirect(url_for(user.role))
-
-
-@app.route('/update_task/<task_id>', methods=['GET', 'POST'])
-@login_required
-def update_task(task_id):
-    """
-    It is used to update tasks
-    """
-    user = User.query.filter_by(id=current_user.get_id()).first()
-
-    if request.method == "POST":
-        project_id = request.form['project_id']
-        task_title = request.form['task_title']
-        milestone = request.form['milestone']
-        start_date = request.form['start_date']
-        end_date = request.form['end_date']
-        estimated_hours = request.form['estimated_hours']
-        qa = request.form['qa']
-        priority = request.form['priority']
-        _type = request.form['type']
-        description = request.form['description']
-        try:
-            update_this_task = Details.query.filter_by(id=task_id).first()
-            update_this_task.project_id = project_id
-            update_this_task.task_title = task_title
-            update_this_task.milestone = milestone
-            update_this_task.start_date = start_date
-            update_this_task.end_date = end_date
-            update_this_task.estimated_hours = get_perfect_time(estimated_hours)
-            update_this_task.qa = qa
-            update_this_task.priority = priority
-            update_this_task.type = _type
-            update_this_task.description = description
-            db.session.commit()
-            if user.role == "developer":
-                return redirect(url_for(request.args.get('next')))
-            else:
-                next_url = request.args.get('next') + "/" + update_this_task.developer.replace(" ", "_")
-                return redirect(next_url)
-        except Exception as e:
-            print e
-
-    return redirect(url_for(user.role))
-
-
-@app.route('/all_tasks', methods=['GET', 'POST'])
-@app.route('/all_tasks/<username>', methods=['GET', 'POST'])
-@login_required
-def all_tasks(username=""):
-    """
-    It is used to see all_tasks
-    """
-    user = User.query.filter_by(id=current_user.get_id()).first()
-    if user.role == 'admin':
-        if request.method == "GET":
-            current = User.query.filter_by(username=username.replace("_", " ")).first()
-            is_there_details = Details.query.filter_by(developer=current.username).first()
-            if is_there_details:
-                all_tasks_of = Details.query.filter_by(developer=current.username)
-
-                return render_template('all_tasks_of.html', user=user, developer=current,
-                                       all_tasks=all_tasks_of)
-            return render_template('all_tasks_of.html', user=user, developer=current)
-    else:
-        if request.method == "GET":
-            current = User.query.filter_by(username=user.username).first()
-            is_there_details = Details.query.filter_by(developer=current.username).first()
-            if is_there_details:
-                all_tasks_of = Details.query.filter_by(developer=current.username)
-
-                return render_template('all_tasks_of.html', user=user, developer=current,
-                                       all_tasks=all_tasks_of)
-            return render_template('all_tasks_of.html', user=user, developer=current)
-
-
-@app.route('/add_new_user', methods=['GET', 'POST'])
-@login_required
-def add_new_user():
-    """
-    It is called by admin to add new developer
-        case 1: if new developer is added successfully then admin is redirected to admin page with Successfully created
-        msg
-        case 2: if GET method is called then add developer page is rendered with register form
-        case 3: if developer tries to load this page developer is redirected to developer page
-    """
-    user = User.query.filter_by(id=current_user.get_id()).first()
-    if user.role == 'admin':
-        form = RegisterForm()
-        if form.validate_on_submit():
-            hashed_password = generate_password_hash(form.password.data, method='sha256')
-            new_user = User(username=form.username.data,
-                            email=form.email.data,
-                            password=hashed_password,
-                            role=form.role.data,
-                            latest_task="no")
-            try:
-                db.session.add(new_user)
-                db.session.commit()
-                flash("Added")
-                return redirect(url_for('admin'))
-            except Exception as e:
-                db.session.rollback()
-                print e
-                flash("Username/Email already Exists")
-                return render_template('add_new_user.html',
-                                       form=form,
-                                       user=user)
-
-        return render_template('add_new_user.html', form=form, user=user)
-    return redirect(url_for('developer'))
-
-
-@app.route('/change_password', methods=['GET', 'POST'])
-@login_required
-def change_password():
-    """
-    It is used to change password
-    """
-    user = User.query.filter_by(id=current_user.get_id()).first()
-    form = ChangePasswordForm()
-    if form.validate_on_submit():
-
-        if check_password_hash(user.password, form.current_password.data):
-            if form.new_password.data == form.confirm_password.data \
-                    and form.new_password.data != form.current_password.data:
-                hashed_password = generate_password_hash(form.new_password.data, method='sha256')
-                user.password = hashed_password
-                db.session.commit()
-                flash("Success")
-                return redirect(url_for(user.role))
-            else:
-                flash("Both password should be same and differ from current password")
-                if user.role == "developer":
-                    return render_template("change_password.html",
-                                           user=user,
-                                           form=form)
-        else:
-            flash("Please enter old password correctly")
-            return render_template("change_password.html",
-                                   user=user,
-                                   form=form)
-    return render_template("change_password.html", form=form, user=user)
-
-
-@app.route('/remove_developer/<username>', methods=['GET', 'POST'])
-@login_required
-def remove_developer(username):
-    """
-    It is used to remove developers
-    """
-    user = User.query.filter_by(id=current_user.get_id()).first()
-    if user.role == 'admin':
-        try:
-            User.query.filter_by(username=username).delete()
-            Details.query.filter_by(developer=username).delete()
-            db.session.commit()
-            flash("Deleted")
-            return redirect(url_for('admin'))
-
-        except Exception as e:
-            print e
-            os.abort(404)
-
-    return redirect(url_for('developer'))
-
-
 @app.route('/logout')
 @login_required
 def logout():
@@ -841,6 +1000,7 @@ def logout():
     user = User.query.filter_by(id=current_user.get_id()).first()
     user.logged_in = 0
     db.session.commit()
+
     logout_user()
     return redirect(url_for('login'))
 
@@ -851,6 +1011,44 @@ def page_not_found(error):
     This method will be called when something goes wrong
     """
     return render_template('error.html', error=error)
+
+
+def get_css_framework():
+    """
+
+    :return:
+    """
+    return current_app.config.get('CSS_FRAMEWORK', 'bootstrap3')
+
+
+def get_link_size():
+    """
+
+    :return:
+    """
+    return current_app.config.get('LINK_SIZE', 'sm')
+
+
+def show_single_page_or_not():
+    """
+
+    :return:
+    """
+    return current_app.config.get('SHOW_SINGLE_PAGE', False)
+
+
+def get_pagination(**kwargs):
+    """
+
+    :param kwargs:
+    :return:
+    """
+    kwargs.setdefault('record_name', 'records')
+    return Pagination(css_framework=get_css_framework(),
+                      link_size=get_link_size(),
+                      show_single_page=show_single_page_or_not(),
+                      **kwargs
+                      )
 
 
 if __name__ == '__main__':
