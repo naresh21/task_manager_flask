@@ -47,15 +47,6 @@ class Details(UserMixin, db.Model):
     added_on = db.Column(db.String(10))
 
 
-class LoginForm(FlaskForm):
-    """
-    This class is used for login form
-    """
-    username = StringField('Username', validators=[InputRequired(), Length(min=5, max=50)])
-    password = PasswordField('Password', validators=[InputRequired(), Length(min=3, max=80)])
-    remember = BooleanField('Remember Me')
-
-
 class RegisterForm(FlaskForm):
     """
     This class is used for registration form
